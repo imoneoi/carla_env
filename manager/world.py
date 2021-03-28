@@ -4,7 +4,7 @@ import carla
 import numpy as np
 
 
-class WorldInitializer:
+class WorldManager:
     def __init__(self,
                  global_options: dict,
                  client: carla.Client):
@@ -12,8 +12,11 @@ class WorldInitializer:
         self.options = {
             "dt": 0.1,
 
-            "map_list": client.get_available_maps(),
-            "map_lifetime": 10
+            "map_list": [x for x in client.get_available_maps() if not x.endswith("_Opt")],
+            "map_lifetime": 10,
+
+            "weather_list": [k for k, v in vars(carla.WeatherParameters).items()
+                             if isinstance(v, carla.WeatherParameters)]
         }
 
         self.options.update(global_options.get("world", {}))
@@ -42,7 +45,14 @@ class WorldInitializer:
             settings.fixed_delta_seconds = self.options["dt"]
             self.world.apply_settings(settings)
 
+            # update world
+            self.world.tick()
+
             # clear map age
             self.map_age = 0
 
         self.map_age += 1
+
+        # change weather
+        weather_name = np.random.choice(self.options["weather_list"])
+        self.world.set_weather(getattr(carla.WeatherParameters, weather_name))
