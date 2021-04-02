@@ -17,6 +17,12 @@ class CarlaEnv(gym.Env, abc.ABC):
         self.world_manager = WorldManager(global_config, self.server_manager.get())
         self.car_manager = CarManager(global_config)
 
+    def __del__(self):
+        # delete in sequence
+        del self.car_manager
+        del self.world_manager
+        del self.server_manager
+
     def reset(self):
         # destroy all existing cars
         self.car_manager.destroy_all_cars()

@@ -2,6 +2,7 @@ import psutil
 import subprocess
 import json
 import os
+import signal
 
 import carla
 import numpy as np
@@ -41,9 +42,17 @@ class ServerManager:
         print("Server Options: ", json.dumps(self.options))
 
     def __del__(self):
+        # close client
+        if self.tm:
+            del self.tm
+        if self.client:
+            del self.client
+
         # kill server
         if self.server:
-            self.server.kill()
+            # kill server process group
+            pgid = os.getpgid(self.server.pid)
+            os.killpg(pgid, signal.SIGKILL)
 
     def get(self):
         if self.client is None:
