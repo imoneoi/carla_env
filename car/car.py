@@ -118,9 +118,8 @@ class Car:
     def create_collision_sensor(self):
         # collision
         sensor_blueprint = self.world.get_blueprint_library().find('sensor.other.collision')
-        sensor = self.world.spawn_actor(sensor_blueprint, carla.Transform(),
-                                        attach_to=self.actor,
-                                        attachment_type=carla.AttachmentType.Rigid)
+        sensor = self.world.spawn_actor(sensor_blueprint, carla.Transform(), attach_to=self.actor)
+
         weak_self = weakref.ref(self)
         sensor.listen(lambda event: Car._collision_callback(weak_self, event))
 
@@ -137,9 +136,8 @@ class Car:
     def create_lane_invasion_sensor(self):
         # collision
         sensor_blueprint = self.world.get_blueprint_library().find('sensor.other.lane_invasion')
-        sensor = self.world.spawn_actor(sensor_blueprint, carla.Transform(),
-                                        attach_to=self.actor,
-                                        attachment_type=carla.AttachmentType.Rigid)
+        sensor = self.world.spawn_actor(sensor_blueprint, carla.Transform(), attach_to=self.actor)
+
         weak_self = weakref.ref(self)
         sensor.listen(lambda event: Car.lane_invasion_callback(weak_self, event))
 

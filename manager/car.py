@@ -14,7 +14,10 @@ class CarManager:
             "num_controlled_cars": 1,
             "num_auto_cars": 0,
 
-            "car_blueprint_list": None
+            "car_blueprint_list": None,
+            "car_blueprint_blacklist": ["vehicle.chargercop2020.chargercop2020",
+                                        "vehicle.charger2020.charger2020",
+                                        "vehicle.mercedesccc.mercedesccc"]  # FIXME: See docs/known_bugs.md
         }
 
         self.options.update(global_options.get("car_manager", {}))
@@ -26,6 +29,7 @@ class CarManager:
         # cars
         self.cars = []
         self.uncontrolled_cars = []
+        self.uncontrolled_cars_client = None
 
         # debug info
         print("Car Manager Options: ", json.dumps(self.options))
@@ -49,10 +53,14 @@ class CarManager:
         selected_list = self.options["car_blueprint_list"]
         if selected_list is None:
             # filter only 4 wheel cars (to remove bicycles)
-            car_blueprint_list = list(filter(lambda vehicle: int(vehicle.get_attribute("number_of_wheels")) == 4,
-                                      blueprint_library.filter("vehicle.*")))
+            car_blueprint_list = [item for item in blueprint_library.filter("vehicle.*")
+                                  if int(item.get_attribute("number_of_wheels")) == 4]
         else:
             car_blueprint_list = [blueprint_library.find(name) for name in selected_list]
+
+        # remove blacklist
+        car_blueprint_list = [item for item in car_blueprint_list
+                              if item.id not in self.options["car_blueprint_blacklist"]]
 
         # spawn cars (controlled)
         spawn_point_list = world.get_map().get_spawn_points()
@@ -97,7 +105,11 @@ class CarManager:
                 carla.command.SpawnActor(car_blueprint, spawn_point)
                     .then(carla.command.SetAutopilot(carla.command.FutureActor, True, tm_port)))
 
-        client.apply_batch_sync(batch_op, True)
+        result = client.apply_batch_sync(batch_op, True)
+
+        # record uncontrolled cars
+        self.uncontrolled_cars_client = client
+        self.uncontrolled_cars = [item.actor_id for item in result if not item.error]
 
         # update world
         world.tick()
@@ -105,10 +117,14 @@ class CarManager:
     def destroy_all_cars(self):
         # destroy existing cars
         [car.destroy() for car in self.cars]
-        [car.destroy() for car in self.uncontrolled_cars]
 
+        if self.uncontrolled_cars_client:
+            self.uncontrolled_cars_client.apply_batch([carla.command.DestroyActor(x) for x in self.uncontrolled_cars])
+
+        # clear recordings
         self.cars = []
         self.uncontrolled_cars = []
+        self.uncontrolled_cars_client = None
 
     # synchronization
     def sync_before_tick(self):
