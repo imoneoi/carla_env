@@ -43,6 +43,8 @@ class WorldManager:
             settings = self.world.get_settings()
             settings.synchronous_mode = True
             settings.fixed_delta_seconds = self.options["dt"]
+
+            settings.no_rendering_mode = True
             self.world.apply_settings(settings)
 
             # update world
