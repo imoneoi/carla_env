@@ -9,7 +9,7 @@ Max penalty pts: -100 (Collision)
 ## Safety
 
 - -100 Collision (Debounced)
-  
+
 ## Traffic Rules
 
 - -20  Lane invasion (DoubleSolid)
