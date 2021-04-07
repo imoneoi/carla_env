@@ -1,4 +1,5 @@
 from car.reward import CarReward
+from car.map import CarMap
 
 import weakref
 
@@ -41,6 +42,9 @@ class Car:
         self.lane_invasion_events = []
         self.create_collision_sensor()
         self.create_lane_invasion_sensor()
+
+        # map
+        # self.map = CarMap(self, world, self.options.get("map", {}))
 
         # reward
         self.reward = CarReward(self, reward_weights)
