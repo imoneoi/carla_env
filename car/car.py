@@ -1,5 +1,5 @@
 from car.reward import CarReward
-from car.map import CarMap
+# from car.map import CarMap
 
 import weakref
 
@@ -47,7 +47,7 @@ class Car:
         # self.map = CarMap(self, world, self.options.get("map", {}))
 
         # reward
-        self.reward = CarReward(self, reward_weights)
+        self.reward = CarReward(self, reward_weights, self.options.get("reward", {}))
 
     def destroy(self):
         [cam.destroy() for cam in self.cameras]
