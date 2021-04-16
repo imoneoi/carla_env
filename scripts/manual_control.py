@@ -110,28 +110,28 @@ class ManualInterface:
             self.tps_total_time = 0
 
     def on_render(self):
+        _, h, w = self.obs[0][0].shape
+
         # init surface
         if self.surface is None:
             n_cars = len(self.obs)
             n_cameras = len(self.obs[0])
 
-            h, w, _ = self.obs[0][0].shape
             self.surface = pygame.display.set_mode((w * n_cameras, h * n_cars), pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         # show images
         y = 0
-        h, w, _ = self.obs[0][0].shape
         for cam, rew in zip(self.obs, self.total_reward):
             # draw car cam images
             x = 0
             for cam_img in cam:
-                cam_surf = pygame.surfarray.make_surface(cam_img.swapaxes(0, 1))
+                cam_surf = pygame.surfarray.make_surface(cam_img.transpose(2, 1, 0))
                 self.surface.blit(cam_surf, (x, y))
 
                 x += w
 
             # draw reward
-            rew_surf = self.font.render("Reward: {:.2f}".format(rew), True, (255, 0, 0))
+            rew_surf = self.font.render("Reward: {:.2f}".format(rew), True, (0, 0, 255))
             self.surface.blit(rew_surf, (10, y + 10))
 
             y += h
