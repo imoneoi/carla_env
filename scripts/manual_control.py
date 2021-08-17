@@ -125,7 +125,15 @@ class ManualInterface:
             # draw car cam images
             x = 0
             for cam_img in cam:
-                cam_surf = pygame.surfarray.make_surface(cam_img.transpose(2, 1, 0))
+                if cam_img.shape[0] < 3:
+                    # pad channel
+                    padded_cam_img = np.concatenate([
+                        cam_img,
+                        np.zeros((1, *cam_img.shape[1:]), dtype=cam_img.dtype)], axis=0)
+                else:
+                    padded_cam_img = cam_img
+
+                cam_surf = pygame.surfarray.make_surface(padded_cam_img.transpose(2, 1, 0))
                 self.surface.blit(cam_surf, (x, y))
 
                 x += w
@@ -160,7 +168,7 @@ def main():
             "dt": dt
         }
     }
-    env = CarlaEnv(global_options)
+    env = CarlaEnv(global_options, 0)
 
     ui = ManualInterface(env)
     ui.run(int(1.0 / dt))

@@ -1,4 +1,5 @@
 import json
+import os
 
 import numpy as np
 import onnxruntime
@@ -9,7 +10,8 @@ class PerceptionManager:
                  global_options: dict,
                  gpu_index: int):
         self.options = {
-            "drivable_model": "static_files/models/ep_44_iou_0.9343.checkpoint.onnx",
+            "drivable_model": os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                           "../static_files/models/ep_44_iou_0.9343.checkpoint.onnx"),
             "human_readable": False
         }
         self.options.update(global_options.get("perception", {}))
@@ -33,10 +35,12 @@ class PerceptionManager:
         logprob = self.drivable_model.run(None, {"input": x})[0]
 
         label = np.argmax(logprob, 1)
-        drivable = np.concatenate([[label == i] for i in range(logprob.shape[1])], axis=1).astype(np.uint8) * 255
+        # get drivable (ignore 0: non drivable)
+        drivable = np.concatenate([[label == i] for i in range(1, logprob.shape[1])], axis=1).astype(np.uint8) * 255
 
         if self.options["human_readable"]:
             num_sensors += 1
+            drivable = np.concatenate([drivable, np.zeros((1, 1, *drivable.shape[2:]), dtype=np.uint8)], axis=1)
             drivable = np.concatenate([drivable, ((x + 1) / 2 * 255).astype(np.uint8)], axis=0)
 
-        return drivable.reshape(num_cars, num_sensors, *drivable.shape[1:])
+        return drivable.reshape((num_cars, num_sensors, *drivable.shape[1:]))
