@@ -4,6 +4,9 @@
 # Static
 static_files/
 
+# Simulator
+carla_simulator/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

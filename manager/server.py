@@ -14,7 +14,8 @@ class ServerManager:
                  gpu_index: int = 0):
         # default options
         self.options = {
-            "path": "../CARLA_0.9.11/CarlaUE4.sh",
+            "path": os.path.abspath(os.path.join(
+                os.path.dirname(__file__), "../carla_simulator/CARLA_0.9.11/CarlaUE4.sh")),
 
             "quality": "Low",
 
