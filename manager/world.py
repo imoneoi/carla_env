@@ -12,7 +12,7 @@ class WorldManager:
         self.options = {
             "dt": 0.1,
 
-            "map_list": [x for x in client.get_available_maps() if not x.endswith("_Opt")],
+            "map_list": [x for x in client.get_available_maps() if (not x.endswith("_Opt")) and (not "HD" in x)],
             "map_lifetime": 5,
 
             "weather_list": [k for k, v in vars(carla.WeatherParameters).items()
