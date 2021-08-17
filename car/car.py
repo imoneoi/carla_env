@@ -169,6 +169,17 @@ class Car:
         self.lane_invasion_events = []
 
     def apply_control(self, action):
+        if isinstance(action, np.ndarray):
+            accel = np.clip(action[0], -1, 1)
+            steer = np.clip(action[1], -1, 1)
+
+            action = carla.VehicleControl(
+                throttle=max(0.0, accel),
+                brake=-min(0.0, accel),
+
+                steer=steer,
+            )
+
         self.actor.apply_control(action)
 
     def get_observation(self):

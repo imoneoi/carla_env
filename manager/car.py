@@ -135,6 +135,9 @@ class CarManager:
 
     # control
     def apply_control(self, action):
+        if isinstance(action, np.ndarray):
+            action = action.reshape(len(self.cars), -1)
+
         return [car.apply_control(act) for car, act in zip(self.cars, action)]
 
     def get_observation(self):
