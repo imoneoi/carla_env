@@ -17,7 +17,7 @@ class Car:
         # default options
         self.options = {
             "camera_x": 640,
-            "camera_y": 352,
+            "camera_y": 320,
             "camera_postprocess": False
         }
         self.options.update(options)

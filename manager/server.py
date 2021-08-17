@@ -19,7 +19,7 @@ class ServerManager:
             "quality": "Low",
 
             "resolution_x": 640,
-            "resolution_y": 352,
+            "resolution_y": 320,
 
             "retries_on_error": 60,
             "timeout": 5,
