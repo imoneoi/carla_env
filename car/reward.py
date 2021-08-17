@@ -15,32 +15,36 @@ class CarReward:
 
             "over_speed_per_tick": -0.5,
 
-            "forward": 0.1,  # every meter
+            "forward": 0.25,  # every meter
         }
         self.weights.update(weights)
 
         # init options
         self.options = {
-            "speed_limit": 15  # m/s
+            "speed_limit": 10,  # m/s
+            "collision_debounce_ticks": 30,  # 1 collision / 3sec
         }
         self.options.update(options)
 
         # collision debounce
-        self.last_collision = False
+        self.last_collision_elapsed = self.options["collision_debounce_ticks"]
 
         # forward
         self.last_location = None
 
     def get_reward(self):
-        reward = 0
+        reward = 0.0
 
         # Part 1. Safety
         # collision penalty
         is_collision = len(self.car.collision_events) > 0
-        if is_collision != self.last_collision:
-            self.last_collision = is_collision
-            if is_collision:
+        if is_collision:
+            if self.last_collision_elapsed >= self.options["collision_debounce_ticks"]:
                 reward += self.weights["collision"]
+
+            self.last_collision_elapsed = 0
+        else:
+            self.last_collision_elapsed += 1
 
         # Part 2. Traffic Rules
         # lane invasion collision

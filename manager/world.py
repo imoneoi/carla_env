@@ -13,7 +13,7 @@ class WorldManager:
             "dt": 0.1,
 
             "map_list": [x for x in client.get_available_maps() if not x.endswith("_Opt")],
-            "map_lifetime": 10,
+            "map_lifetime": 5,
 
             "weather_list": [k for k, v in vars(carla.WeatherParameters).items()
                              if isinstance(v, carla.WeatherParameters)]
