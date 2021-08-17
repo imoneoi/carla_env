@@ -106,19 +106,17 @@ class ServerManager:
 
             "-quality-level={}".format(self.options["quality"]),
 
-            "--carla-rpc-port={}".format(self.server_port)
-        ]
+            "--carla-rpc-port={}".format(self.server_port),
 
-        server_env = os.environ.copy()
-        server_env.update({
-            "CUDA_VISIBLE_DEVICES": str(self.gpu_index)
-        })
+            # select GPU
+            # https://answers.unrealengine.com/questions/1009375/unable-to-select-gpu-when-using-renderoffscreen.html
+            "-graphicsadapter={}".format(self.gpu_index)
+        ]
 
         server_command = " ".join(server_command)
         print(server_command)
         self.server = subprocess.Popen(
             server_command,
-            env=server_env,
             preexec_fn=os.setsid,
             shell=True
         )
