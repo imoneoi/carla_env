@@ -1,13 +1,15 @@
 from carla_env import CarlaEnv
 
 import carla
+import numpy as np
 
 
 def main():
     # options
     dt = 0.1
-    test_times = 10
-    test_ticks = 1000
+    test_num_cars = 10
+    test_times = 10000
+    test_ticks = 10000
     test_reward_thresh = -100
 
     # test all cars
@@ -17,10 +19,12 @@ def main():
         # construct env
         global_options = {
             "world": {
-                "dt": 0.1
+                "dt": dt
             },
             "car_manager": {
-                "car_blueprint_list": [car_name]
+                "car_blueprint_list": None, #  [car_name],
+
+                "num_controlled_cars": test_num_cars
             }
         }
         env = CarlaEnv(global_options)
@@ -35,13 +39,20 @@ def main():
             print("Testing {} episode {}".format(car_name, test_iter))
 
             is_fail = True
+            min_reward = None
             env.reset()
             for step in range(test_ticks):
                 # go straight
-                next_obs, rew, done, _ = env.step([carla.VehicleControl(throttle=1.0)])
+                next_obs, rew, done, _ = env.step([carla.VehicleControl(throttle=1.0) for _ in range(test_num_cars)])
+                rew = np.array(rew)
+
+                if min_reward is None:
+                    min_reward = rew
+                else:
+                    min_reward = np.minimum(min_reward, rew)
 
                 # check threshold
-                if rew[0] <= test_reward_thresh:
+                if (min_reward <= test_reward_thresh).all():
                     is_fail = False
                     break
 
