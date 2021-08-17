@@ -4,15 +4,26 @@ from manager.car import CarManager
 from manager.perception import PerceptionManager
 
 import abc
+import psutil
+import os
+import signal
 
 import carla
 import gym
+
+
+def kill_all_servers():
+    """Kill all PIDs that start with Carla"""
+    processes = [p for p in psutil.process_iter() if "carla" in p.name().lower()]
+    for process in processes:
+        os.kill(process.pid, signal.SIGKILL)
 
 
 class CarlaEnv(gym.Env, abc.ABC):
     def __init__(self,
                  global_config: dict,
                  gpu_index: int = 0):
+        super().__init__()
         # create instance managers
         self.server_manager = ServerManager(global_config, gpu_index)
         self.world_manager = WorldManager(global_config, self.server_manager.get())
