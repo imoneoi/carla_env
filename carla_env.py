@@ -7,7 +7,9 @@ import abc
 import psutil
 import os
 import signal
+import random
 
+import numpy as np
 import carla
 import gym
 
@@ -24,23 +26,43 @@ class CarlaEnv(gym.Env, abc.ABC):
                  global_config: dict,
                  gpu_index: int = 0):
         super().__init__()
+        self.global_config = global_config
+        self.gpu_index = gpu_index
+
         # create instance managers
-        self.server_manager = ServerManager(global_config, gpu_index)
-        self.world_manager = WorldManager(global_config, self.server_manager.get())
-        self.car_manager = CarManager(global_config)
-        self.perception_manager = PerceptionManager(global_config, gpu_index)
+        self.initialized = False
+        self.server_manager = None
+        self.world_manager = None
+        self.car_manager = None
+        self.perception_manager = None
+
+    def init(self):
+        if not self.initialized:
+            # seed random generators
+            np.random.seed(random.randint(0, 1000000))
+
+            self.server_manager = ServerManager(self.global_config, self.gpu_index)
+            self.world_manager = WorldManager(self.global_config, self.server_manager.get())
+            self.car_manager = CarManager(self.global_config)
+            self.perception_manager = PerceptionManager(self.global_config, self.gpu_index)
+
+            self.initialized = True
 
     def __del__(self):
         # delete in sequence
-        del self.perception_manager
-        del self.car_manager
-        del self.world_manager
-        del self.server_manager
+        if self.initialized:
+            del self.perception_manager
+            del self.car_manager
+            del self.world_manager
+            del self.server_manager
 
     def _get_observation(self):
         return self.perception_manager.infer(self.car_manager.get_observation())
 
     def reset(self):
+        if not self.initialized:
+            self.init()
+
         # destroy all existing cars
         self.car_manager.destroy_all_cars()
 
