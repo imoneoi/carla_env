@@ -1,5 +1,6 @@
 from scripts.util.joystick import Joystick
 from carla_env import CarlaEnv
+from wrapped_carla_env import BiasedAction
 
 import time
 import carla
@@ -62,13 +63,14 @@ class ManualInterface:
             steer = js.axes["x"]   # Right lever, U <--> D
             reverse = js.buttons["tl"]    # LB
 
-            act.append(carla.VehicleControl(
-                throttle=max(0.0, accel),
-                brake=-min(0.0, accel),
-
-                steer=steer,
-                reverse=reverse
-            ))
+            # act.append(carla.VehicleControl(
+            #     throttle=max(0.0, accel),
+            #     brake=-min(0.0, accel),
+            #
+            #     steer=steer,
+            #     reverse=reverse
+            # ))
+            act.append(np.array([accel, steer], dtype=np.float32))
 
         # check if reset
         is_reset = sum([js.buttons["y"] for js in self.joysticks])
@@ -162,13 +164,13 @@ class ManualInterface:
 
 
 def main():
-    dt = 0.05
+    dt = 0.1
     global_options = {
         "world": {
             "dt": dt
         }
     }
-    env = CarlaEnv(global_options, 0)
+    env = BiasedAction(CarlaEnv(global_options, 0))
 
     ui = ManualInterface(env)
     ui.run(int(1.0 / dt))
