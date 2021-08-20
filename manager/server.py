@@ -43,11 +43,14 @@ class ServerManager:
         print("Server Options: ", json.dumps(self.options))
 
     def __del__(self):
+        self.cleanup()
+
+    def cleanup(self):
         # close client
-        if self.tm:
-            del self.tm
-        if self.client:
-            del self.client
+        self.tm = None
+        self.tm_port = None
+
+        self.client = None
 
         # kill server
         if self.server:
@@ -55,9 +58,13 @@ class ServerManager:
             pgid = os.getpgid(self.server.pid)
             os.killpg(pgid, signal.SIGKILL)
 
+            self.server = None
+            self.server_port = None
+
     def get(self):
         if self.client is None:
-            self.start_server()
+            if self.server is None:
+                self.start_server()
 
             # try connect client
             for _ in range(self.options["retries_on_error"]):
@@ -74,6 +81,8 @@ class ServerManager:
             # create traffic manager
             self.tm = self.client.get_trafficmanager(self.tm_port)
             self.tm.set_hybrid_physics_mode(self.options["tm_hybrid_physics_mode"])
+
+            print("TM port: ", self.tm_port)
 
         return self.client
 
