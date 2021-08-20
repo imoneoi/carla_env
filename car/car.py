@@ -184,7 +184,7 @@ class Car:
 
     def get_observation(self):
         # return images
-        return self.camera_images
+        return self.camera_images, self.actor.get_velocity()
 
     def get_reward(self):
         reward = self.reward.get_reward()

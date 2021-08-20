@@ -141,7 +141,15 @@ class CarManager:
         return [car.apply_control(act) for car, act in zip(self.cars, action)]
 
     def get_observation(self):
-        return [car.get_observation() for car in self.cars]
+        result = None
+        for car in self.cars:
+            obs = car.get_observation()
+            if result is None:
+                result = [[] for _ in range(len(obs))]
+            for idx, v in enumerate(obs):
+                result[idx].append(v)
+
+        return result
 
     def get_reward(self):
         return [car.get_reward() for car in self.cars]

@@ -42,7 +42,7 @@ class CarlaEnv(gym.Env, abc.ABC):
             np.random.seed(random.randint(0, 1000000))
 
             self.server_manager = ServerManager(self.global_config, self.gpu_index)
-            self.world_manager = WorldManager(self.global_config, self.server_manager.get())
+            self.world_manager = WorldManager(self.global_config, self.server_manager)
             self.car_manager = CarManager(self.global_config)
             self.perception_manager = PerceptionManager(self.global_config, self.gpu_index)
 
@@ -57,7 +57,7 @@ class CarlaEnv(gym.Env, abc.ABC):
             del self.server_manager
 
     def _get_observation(self):
-        return self.perception_manager.infer(self.car_manager.get_observation())
+        return self.perception_manager.infer(*self.car_manager.get_observation())
 
     def reset(self):
         if not self.initialized:
