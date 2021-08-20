@@ -3,17 +3,21 @@ import json
 import carla
 import numpy as np
 
+from manager.server import ServerManager
+
 
 class WorldManager:
     def __init__(self,
                  global_options: dict,
-                 client: carla.Client):
+                 server_manager: ServerManager):
         # default options
         self.options = {
             "dt": 0.1,
 
-            "map_list": [x for x in client.get_available_maps() if (not x.endswith("_Opt")) and (not "HD" in x)],
+            "map_list": [x for x in server_manager.get().get_available_maps()
+                         if (not x.endswith("_Opt")) and (not "HD" in x)],
             "map_lifetime": 5,
+            "server_lifetime": 10,
 
             "weather_list": [k for k, v in vars(carla.WeatherParameters).items()
                              if isinstance(v, carla.WeatherParameters)]
@@ -22,11 +26,12 @@ class WorldManager:
         self.options.update(global_options.get("world", {}))
 
         # world
-        self.client = client
+        self.server_manager = server_manager
         self.world = None
 
         # internal
         self.map_age = 0
+        self.server_age = 0
 
         # debug info
         print("World Options: ", json.dumps(self.options))
@@ -37,8 +42,16 @@ class WorldManager:
     def reset(self):
         # change map
         if (self.world is None) or (self.map_age >= self.options["map_lifetime"]):
+            # reset server if required
+            self.server_age += 1
+            if self.server_age >= self.options["server_lifetime"]:
+                self.server_manager.cleanup()
+                exit(-1)
+
+                self.server_age = 0
+
             # create world
-            self.world = self.client.load_world(np.random.choice(self.options["map_list"]))
+            self.world = self.server_manager.get().load_world(np.random.choice(self.options["map_list"]))
             # set sync mode
             settings = self.world.get_settings()
             settings.synchronous_mode = True
