@@ -14,7 +14,8 @@ class CarReward:
             "lane_invasion_double_solid": -20,
 
             "over_speed_per_tick": -0.5,
-
+            
+            "stay_per_tick": -0.1,
             "forward": 0.25,  # every meter
         }
         self.weights.update(weights)
@@ -22,6 +23,7 @@ class CarReward:
         # init options
         self.options = {
             "speed_limit": 10,  # m/s
+            "stay_speed": 0.1,  # m/s
             "collision_debounce_ticks": 30,  # 1 collision / 3sec
         }
         self.options.update(options)
@@ -67,6 +69,10 @@ class CarReward:
         is_over_speed = velocity > self.options["speed_limit"]
 
         reward += is_over_speed * self.weights["over_speed_per_tick"]
+
+        # stay
+        is_stay = velocity < self.options["stay_speed"]
+        reward += is_stay * self.weights["stay_per_tick"]
 
         # Part 3. Forward
         location = self.car.actor.get_location()
