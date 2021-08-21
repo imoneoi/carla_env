@@ -113,7 +113,7 @@ class CarReward:
                   self.weights["dist_center"] * reward_dist_center + \
                   self.weights["angle"] * reward_angle
 
-        print("speed {:.2f} dist {:.2f} angle {:.2f}".format(reward_speed, reward_dist_center, reward_angle))
+        # print("speed {:.2f} dist {:.2f} angle {:.2f}".format(reward_speed, reward_dist_center, reward_angle))
 
         # Done: critical infraction
         done = is_collision
