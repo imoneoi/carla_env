@@ -106,12 +106,15 @@ class CarReward:
         reward_dist_center = np.clip(1.0 - dist_to_center / self.options["dist_center_max"], 0.0, 1.0)
         # angle
         waypoint_forward = vec3d_to_np(car_waypoint.transform.rotation.get_forward_vector())
-        angle = np.arccos(np.dot(waypoint_forward, car_heading) / (np.linalg.norm(waypoint_forward) * np.linalg.norm(car_heading)))
+        angle = np.dot(waypoint_forward, car_heading) / (np.linalg.norm(waypoint_forward) * np.linalg.norm(car_heading))
+        angle = np.arccos(np.clip(angle, -1, 1))  # improve numerical stability
+
         reward_angle = np.clip(1.0 - angle / self.options["angle_max"], 0.0, 1.0)
 
         reward += self.weights["speed"] * reward_speed + \
                   self.weights["dist_center"] * reward_dist_center + \
                   self.weights["angle"] * reward_angle
+        assert not np.isnan(reward)
 
         # print("speed {:.2f} dist {:.2f} angle {:.2f}".format(reward_speed, reward_dist_center, reward_angle))
 
