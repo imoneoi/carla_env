@@ -34,7 +34,7 @@ class BiasedAction(gym.Wrapper):
 
 
 def create_wrapped_carla_single_car_env(
-        time_limit: int = 600,
+        time_limit: int = 1200,
         **kwargs
 ):
     # create env
