@@ -1,4 +1,5 @@
 from car.car import Car
+from manager.world import WorldManager
 
 import json
 
@@ -8,7 +9,10 @@ import numpy as np
 
 class CarManager:
     def __init__(self,
-                 global_options: dict):
+                 global_options: dict,
+                 world_manager: WorldManager):
+        # world manager
+        self.world_manager = world_manager
         # default options
         self.options = {
             "num_controlled_cars": 1,
@@ -41,13 +45,15 @@ class CarManager:
         return self.cars
 
     def reset(self,
-              world: carla.World,
               client: carla.Client,
               tm_port: int):
         # destroy existing cars
         self.destroy_all_cars()
 
         # select car
+        world = self.world_manager.get()
+        map = self.world_manager.map
+
         blueprint_library = world.get_blueprint_library()
 
         selected_list = self.options["car_blueprint_list"]
@@ -63,7 +69,7 @@ class CarManager:
                               if item.id not in self.options["car_blueprint_blacklist"]]
 
         # spawn cars (controlled)
-        spawn_point_list = world.get_map().get_spawn_points()
+        spawn_point_list = map.get_spawn_points()
         np.random.shuffle(spawn_point_list)
 
         for _ in range(self.options["num_controlled_cars"]):
@@ -151,9 +157,13 @@ class CarManager:
 
         return result
 
-    def get_reward(self):
-        return [car.get_reward() for car in self.cars]
+    def get_reward_done(self):
+        rewards = []
+        done = True
+        for car in self.cars:
+            r, d = car.get_reward_done(self.world_manager.map)
 
-    # done
-    def get_done(self):
-        return False
+            rewards.append(r)
+            done &= d
+
+        return rewards, done

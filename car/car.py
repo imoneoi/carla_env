@@ -186,8 +186,8 @@ class Car:
         # return images
         return self.camera_images, self.actor.get_velocity()
 
-    def get_reward(self):
-        reward = self.reward.get_reward()
+    def get_reward_done(self, world_map):
+        result = self.reward.get_reward_done(world_map)
 
         self.sync_clear_events()
-        return reward
+        return result

@@ -2,28 +2,45 @@ import carla
 import numpy as np
 
 
+def vec3d_to_np(v):
+    return np.array([v.x, v.y, v.z])
+
+
+def distance_to_line(A, B, p):
+    num   = np.linalg.norm(np.cross(B - A, A - p))
+    denom = np.linalg.norm(B - A)
+    if np.isclose(denom, 0):
+        return np.linalg.norm(p - A)
+    return num / denom
+
+
 class CarReward:
     def __init__(self, car, weights: dict, options: dict):
         self.car = car
 
         # init weights
         self.weights = {
-            "collision": -100,
+            "collision": -300,
 
-            "lane_invasion_solid": -10,
-            "lane_invasion_double_solid": -20,
+            "lane_invasion_solid": -100,
+            "lane_invasion_double_solid": -200,
 
-            "over_speed_per_tick": -0.5,
-            
-            "stay_per_tick": -0.1,
-            "forward": 0.25,  # every meter
+            "speed": 1,
+            "dist_center": 1,
+            "angle": 1
         }
         self.weights.update(weights)
 
         # init options
         self.options = {
-            "speed_limit": 10,  # m/s
-            "stay_speed": 0.1,  # m/s
+            "speed_min": 5,  # m/s
+            "speed_target": 6,  # m/s
+            "speed_max": 7,  # m/s
+
+            "angle_max": 30.0 / 180.0 * np.pi,  # rad
+            "dist_center_max": 3.0,  # m
+
+            "waypoint_precision": 0.5,
             "collision_debounce_ticks": 30,  # 1 collision / 3sec
         }
         self.options.update(options)
@@ -31,10 +48,7 @@ class CarReward:
         # collision debounce
         self.last_collision_elapsed = self.options["collision_debounce_ticks"]
 
-        # forward
-        self.last_location = None
-
-    def get_reward(self):
+    def get_reward_done(self, world_map: carla.Map):
         reward = 0.0
 
         # Part 1. Safety
@@ -63,23 +77,45 @@ class CarReward:
         # red light
         # WIP
 
-        # over speed
-        velocity = self.car.actor.get_velocity()
-        velocity = np.sqrt(velocity.x ** 2 + velocity.y ** 2)
-        is_over_speed = velocity > self.options["speed_limit"]
+        # Part 3. Shaped reward
+        car_location = vec3d_to_np(self.car.actor.get_location())
+        car_vel = vec3d_to_np(self.car.actor.get_velocity())
+        car_heading = vec3d_to_np(self.car.actor.get_transform().get_forward_vector())
+        car_waypoint = world_map.get_waypoint(
+            self.car.actor.get_location(),
+            project_to_road=True,
+            lane_type=carla.LaneType.Driving
+        )
+        car_next_waypoint = car_waypoint.next(self.options["waypoint_precision"])
+        car_next_waypoint = car_next_waypoint[0] if len(car_next_waypoint) > 0 else car_waypoint
 
-        reward += is_over_speed * self.weights["over_speed_per_tick"]
 
-        # stay
-        is_stay = velocity < self.options["stay_speed"]
-        reward += is_stay * self.weights["stay_per_tick"]
+        # speed
+        car_speed = np.linalg.norm(car_vel)
+        if car_speed < self.options["speed_min"]:
+            reward_speed = car_speed / self.options["speed_min"]
+        elif car_speed > self.options["speed_target"]:
+            reward_speed = 1.0 - (car_speed - self.options["speed_target"]) / (self.options["speed_max"] - self.options["speed_target"])
+        else:
+            reward_speed = 1.0
+        # dist to center
+        dist_to_center = distance_to_line(
+            vec3d_to_np(car_waypoint.transform.location),
+            vec3d_to_np(car_next_waypoint.transform.location),
+            car_location)
+        reward_dist_center = np.clip(1.0 - dist_to_center / self.options["dist_center_max"], 0.0, 1.0)
+        # angle
+        waypoint_forward = vec3d_to_np(car_waypoint.transform.rotation.get_forward_vector())
+        angle = np.arccos(np.dot(waypoint_forward, car_heading) / (np.linalg.norm(waypoint_forward) * np.linalg.norm(car_heading)))
+        reward_angle = np.clip(1.0 - angle / self.options["angle_max"], 0.0, 1.0)
 
-        # Part 3. Forward
-        location = self.car.actor.get_location()
-        if self.last_location is not None:
-            forward_dist = np.sqrt((location.x - self.last_location.x) ** 2 + (location.y - self.last_location.y) ** 2)
-            reward += self.weights["forward"] * forward_dist
+        reward += self.weights["speed"] * reward_speed + \
+                  self.weights["dist_center"] * reward_dist_center + \
+                  self.weights["angle"] * reward_angle
 
-        self.last_location = location
+        print("speed {:.2f} dist {:.2f} angle {:.2f}".format(reward_speed, reward_dist_center, reward_angle))
 
-        return reward
+        # Done: critical infraction
+        done = is_collision
+
+        return reward, done

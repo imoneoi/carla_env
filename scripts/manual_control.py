@@ -74,6 +74,7 @@ class ManualInterface:
 
         # check if reset
         is_reset = sum([js.buttons["y"] for js in self.joysticks])
+        is_reset |= self.done
         if is_reset:
             if not self.reset_flag:
                 self.reset_env()

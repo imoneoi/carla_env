@@ -43,7 +43,7 @@ class CarlaEnv(gym.Env, abc.ABC):
 
             self.server_manager = ServerManager(self.global_config, self.gpu_index)
             self.world_manager = WorldManager(self.global_config, self.server_manager)
-            self.car_manager = CarManager(self.global_config)
+            self.car_manager = CarManager(self.global_config, self.world_manager)
             self.perception_manager = PerceptionManager(self.global_config, self.gpu_index)
 
             self.initialized = True
@@ -69,7 +69,7 @@ class CarlaEnv(gym.Env, abc.ABC):
         # reset managers
         self.server_manager.reset()
         self.world_manager.reset()
-        self.car_manager.reset(self.world_manager.get(), self.server_manager.get(), self.server_manager.tm_port)
+        self.car_manager.reset(self.server_manager.get(), self.server_manager.tm_port)
 
         # get observation
         return self._get_observation()
@@ -84,4 +84,4 @@ class CarlaEnv(gym.Env, abc.ABC):
         self.car_manager.sync_after_tick()
 
         # get obs, reward, done, info
-        return self._get_observation(), self.car_manager.get_reward(), self.car_manager.get_done(), {}
+        return (self._get_observation(), *self.car_manager.get_reward_done(), {})

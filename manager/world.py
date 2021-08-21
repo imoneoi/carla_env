@@ -28,6 +28,7 @@ class WorldManager:
         # world
         self.server_manager = server_manager
         self.world = None
+        self.map = None
 
         # internal
         self.map_age = 0
@@ -52,6 +53,7 @@ class WorldManager:
 
             # create world
             self.world = self.server_manager.get().load_world(np.random.choice(self.options["map_list"]))
+            self.map = self.world.get_map()
             # set sync mode
             settings = self.world.get_settings()
             settings.synchronous_mode = True

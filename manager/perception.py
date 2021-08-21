@@ -15,7 +15,7 @@ class PerceptionManager:
             "drivable_model": os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                            "../static_files/models/ep_44_iou_0.9343.checkpoint.onnx"),
             "target_size": (160, 80),
-            "max_velocity": 10,
+            "max_velocity": 6,
             "human_readable": False
         }
         self.options.update(global_options.get("perception", {}))
