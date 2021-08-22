@@ -59,8 +59,11 @@ class CarManager:
         selected_list = self.options["car_blueprint_list"]
         if selected_list is None:
             # filter only 4 wheel cars (to remove bicycles)
-            car_blueprint_list = [item for item in blueprint_library.filter("vehicle.*")
-                                  if int(item.get_attribute("number_of_wheels")) == 4]
+            # car_blueprint_list = [item for item in blueprint_library.filter("vehicle.*")
+            #                       if int(item.get_attribute("number_of_wheels")) == 4]
+
+            # do not filter, include bicycles & motorcycles
+            car_blueprint_list = list(blueprint_library.filter("vehicle.*"))
         else:
             car_blueprint_list = [blueprint_library.find(name) for name in selected_list]
 
