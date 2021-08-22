@@ -20,10 +20,10 @@ class CarReward:
 
         # init weights
         self.weights = {
-            "collision": -100,
+            "collision": -10,
 
-            "lane_invasion_solid": -20,
-            "lane_invasion_double_solid": -50,
+            "lane_invasion_solid": -1,
+            "lane_invasion_double_solid": -5,
         }
         self.weights.update(weights)
 
