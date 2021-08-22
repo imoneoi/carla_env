@@ -20,7 +20,7 @@ class CarReward:
 
         # init weights
         self.weights = {
-            "collision": -200,
+            "collision": -100,
 
             "lane_invasion_solid": -20,
             "lane_invasion_double_solid": -50,
@@ -114,6 +114,6 @@ class CarReward:
         print("speed {:.2f} dist {:.2f} angle {:.2f}".format(reward_speed, reward_dist_center, reward_angle))
 
         # Done: critical infraction
-        done = is_collision
+        done = is_collision | is_invasion_double_solid
 
         return reward, done
