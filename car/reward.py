@@ -24,6 +24,8 @@ class CarReward:
 
             "lane_invasion_solid": -1,
             "lane_invasion_double_solid": -5,
+
+            "control_steer": -0.1,
         }
         self.weights.update(weights)
 
@@ -73,7 +75,11 @@ class CarReward:
         # red light
         # WIP
 
-        # Part 3. Shaped reward
+        # Part 3. Control costs
+        steer_abs = abs(self.car.actor.get_control().steer)
+        reward += self.weights["control_steer"] * steer_abs
+
+        # Part 4. Shaped reward
         car_location = vec3d_to_np(self.car.actor.get_location())
         car_vel = vec3d_to_np(self.car.actor.get_velocity())
         car_heading = vec3d_to_np(self.car.actor.get_transform().get_forward_vector())
@@ -111,7 +117,8 @@ class CarReward:
         reward += reward_speed * reward_dist_center * reward_angle
         assert not np.isnan(reward)
 
-        print("speed {:.2f} dist {:.2f} angle {:.2f}".format(reward_speed, reward_dist_center, reward_angle))
+        print("speed {:.2f} dist {:.2f} angle {:.2f} steer {:.2f}".format(
+            reward_speed, reward_dist_center, reward_angle, steer_abs))
 
         # Done: critical infraction
         done = is_collision | is_invasion_double_solid
