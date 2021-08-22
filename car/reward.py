@@ -20,20 +20,15 @@ class CarReward:
 
         # init weights
         self.weights = {
-            "collision": -500,
+            "collision": -200,
 
-            "lane_invasion_solid": -50,
-            "lane_invasion_double_solid": -100,
-
-            "speed": 1,
-            "dist_center": 1,
-            "angle": 1
+            "lane_invasion_solid": -20,
+            "lane_invasion_double_solid": -50,
         }
         self.weights.update(weights)
 
         # init options
         self.options = {
-            "speed_stay": 0.3,  # m/s
             "speed_min": 5,  # m/s
             "speed_target": 6,  # m/s
             "speed_max": 7,  # m/s
@@ -112,15 +107,8 @@ class CarReward:
 
         reward_angle = np.clip(1.0 - angle / self.options["angle_max"], 0.0, 1.0)
 
-        # no shaped reward if stay
-        if car_speed < self.options["speed_stay"]:
-            reward_dist_center = 0
-            reward_angle = 0
-
-        # total reward
-        reward += self.weights["speed"] * reward_speed + \
-                  self.weights["dist_center"] * reward_dist_center + \
-                  self.weights["angle"] * reward_angle
+        # total reward (multiplicative)
+        reward += reward_speed * reward_dist_center * reward_angle
         assert not np.isnan(reward)
 
         print("speed {:.2f} dist {:.2f} angle {:.2f}".format(reward_speed, reward_dist_center, reward_angle))
