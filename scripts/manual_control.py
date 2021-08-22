@@ -171,7 +171,7 @@ def main():
             "dt": dt
         }
     }
-    env = BiasedAction(CarlaEnv(global_options, 0))
+    env = CarlaEnv(global_options, 0)
 
     ui = ManualInterface(env)
     ui.run(int(1.0 / dt))

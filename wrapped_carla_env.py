@@ -39,7 +39,7 @@ def create_wrapped_carla_single_car_env(
 ):
     # create env
     env = CarlaEnv(**kwargs)
-    env = BiasedAction(env)
+    # env = BiasedAction(env)
     env = MeanReward(env)
     env = SingleCarWrapper(env)
 
