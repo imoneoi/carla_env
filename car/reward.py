@@ -20,12 +20,13 @@ class CarReward:
 
         # init weights
         self.weights = {
-            "collision": -10,
+            "collision": -50,
 
-            "lane_invasion_solid": -1,
-            "lane_invasion_double_solid": -5,
+            "lane_invasion": -10,
+            "lane_invasion_solid": -25,
+            "lane_invasion_double_solid": -35,
 
-            "control_steer": -0.1,
+            "control_steer": -0.2,
         }
         self.weights.update(weights)
 
@@ -40,11 +41,13 @@ class CarReward:
 
             "waypoint_precision": 0.5,
             "collision_debounce_ticks": 30,  # 1 collision / 3sec
+            "lane_invasion_debounce_ticks": 30,   # 1 lane collision / 3sec
         }
         self.options.update(options)
 
         # collision debounce
         self.last_collision_elapsed = self.options["collision_debounce_ticks"]
+        self.last_invasion_elapsed = self.options["lane_invasion_debounce_ticks"]
 
     def get_reward_done(self, world_map: carla.Map):
         reward = 0.0
@@ -62,15 +65,25 @@ class CarReward:
 
         # Part 2. Traffic Rules
         # lane invasion collision
+        is_invasion = False
         is_invasion_solid = False
         is_invasion_double_solid = False
         for event in self.car.lane_invasion_events:
             for marking in event.crossed_lane_markings:
+                is_invasion = True
                 is_invasion_solid |= marking.type == carla.LaneMarkingType.Solid
                 is_invasion_double_solid |= marking.type == carla.LaneMarkingType.SolidSolid
 
-        reward += is_invasion_solid * self.weights["lane_invasion_solid"]
-        reward += is_invasion_double_solid * self.weights["lane_invasion_double_solid"]
+        if is_invasion:
+            if self.last_invasion_elapsed >= self.options["lane_invasion_debounce_ticks"]:
+                if not (is_invasion_solid or is_invasion_double_solid):
+                    reward += is_invasion * self.weights["lane_invasion"]
+                reward += is_invasion_solid * self.weights["lane_invasion_solid"]
+                reward += is_invasion_double_solid * self.weights["lane_invasion_double_solid"]
+
+            self.last_invasion_elapsed = 0
+        else:
+            self.last_invasion_elapsed += 1
 
         # red light
         # WIP
