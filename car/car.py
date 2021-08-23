@@ -62,13 +62,13 @@ class Car:
         self.camera_pos.append(carla.Transform(
             carla.Location(
                 x=np.random.uniform(1.2, 2),
-                y=np.random.uniform(-0.1, 0.1),
-                z=np.random.uniform(1.2, 2)
+                y=np.random.uniform(-0.025, 0.025),
+                z=np.random.uniform(0.8, 2)
             ),
             carla.Rotation(
-                yaw=np.random.uniform(-5.0, 5.0),
+                yaw=np.random.uniform(-1.0, 1.0),
                 pitch=np.random.uniform(-15.0, 15.0),
-                roll=np.random.uniform(-15.0, 15.0),
+                roll=np.random.uniform(-1.0, 1.0),
             )
         ))
 
