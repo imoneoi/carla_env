@@ -16,7 +16,7 @@ class CarManager:
         # default options
         self.options = {
             "num_controlled_cars": 1,
-            "num_auto_cars": 50,
+            "num_auto_cars": 100,
 
             "car_blueprint_list": None,
             "car_blueprint_blacklist": ["vehicle.chargercop2020.chargercop2020",
