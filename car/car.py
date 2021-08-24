@@ -59,10 +59,11 @@ class Car:
         self.camera_pos = []
 
         # front camera
+        car_extent_x = self.actor.bounding_box.extent.x
         self.camera_pos.append(carla.Transform(
             carla.Location(
-                x=np.random.uniform(1.6, 2),
-                y=np.random.uniform(-0.025, 0.025),
+                x=car_extent_x + np.random.uniform(0, 1.0),
+                y=np.random.uniform(-0.02, 0.02),
                 z=np.random.uniform(1.0, 2)
             ),
             carla.Rotation(
