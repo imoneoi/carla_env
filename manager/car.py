@@ -17,6 +17,7 @@ class CarManager:
         self.options = {
             "num_controlled_cars": 1,
             "num_auto_cars": 100,
+            "num_walkers": 200,
 
             "car_blueprint_list": None,
             "car_blueprint_blacklist": ["vehicle.chargercop2020.chargercop2020",
@@ -30,10 +31,14 @@ class CarManager:
         self.car_options = global_options.get("car", {})
         self.car_reward_weights = global_options.get("car_reward_weights", {})
 
+        self.client = None
         # cars
         self.cars = []
         self.uncontrolled_cars = []
-        self.uncontrolled_cars_client = None
+
+        # walkers
+        self.walkers = []
+        self.walker_controllers = []
 
         # debug info
         print("Car Manager Options: ", json.dumps(self.options))
@@ -49,6 +54,8 @@ class CarManager:
               tm_port: int):
         # destroy existing cars
         self.destroy_all_cars()
+        # assign client
+        self.client = client
 
         # select car
         world = self.world_manager.get()
@@ -117,8 +124,31 @@ class CarManager:
         result = client.apply_batch_sync(batch_op, True)
 
         # record uncontrolled cars
-        self.uncontrolled_cars_client = client
         self.uncontrolled_cars = [item.actor_id for item in result if not item.error]
+
+        # spawn walkers
+        walker_blueprint_list = world.get_blueprint_library().filter("walker.pedestrian.*")
+        batch_op = []
+        for _ in range(self.options["num_walkers"]):
+            walker_blueprint = np.random.choice(walker_blueprint_list)
+            if walker_blueprint.has_attribute("is_invincible"):
+                walker_blueprint.set_attribute("is_invincible", "false")
+            batch_op.append(carla.command.SpawnActor(walker_blueprint,
+                                                     carla.Transform(world.get_random_location_from_navigation())))
+
+        result = client.apply_batch_sync(batch_op, True)
+
+        self.walkers = [item.actor_id for item in result if not item.error]
+        # spawn walker controllers
+        walker_controller_blueprint = world.get_blueprint_library().find("controller.ai.walker")
+        batch_op = []
+        for walker in self.walkers:
+            batch_op.append(carla.command.SpawnActor(walker_controller_blueprint, carla.Transform(), walker))
+
+        result = client.apply_batch_sync(batch_op, True)
+
+        self.walker_controllers = [item.actor_id for item in result if not item.error]
+        [controller.start() for controller in world.get_actors(self.walker_controllers)]
 
         # update world
         world.tick()
@@ -127,13 +157,26 @@ class CarManager:
         # destroy existing cars
         [car.destroy() for car in self.cars]
 
-        if self.uncontrolled_cars_client:
-            self.uncontrolled_cars_client.apply_batch([carla.command.DestroyActor(x) for x in self.uncontrolled_cars])
-
-        # clear recordings
         self.cars = []
+
+        # destroy uncontrolled cars
+        if self.client:
+            self.client.apply_batch([carla.command.DestroyActor(x) for x in self.uncontrolled_cars])
+
         self.uncontrolled_cars = []
-        self.uncontrolled_cars_client = None
+
+        # destroy walkers
+        if self.client:
+            for controller in self.world_manager.get().get_actors(self.walker_controllers):
+                controller.stop()
+            self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in self.walker_controllers])
+            self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in self.walkers])
+
+        self.walkers = []
+        self.walker_controllers = []
+
+        # clear client
+        self.client = None
 
     # synchronization
     def sync_before_tick(self):
