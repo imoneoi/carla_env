@@ -29,6 +29,11 @@ class PerceptionManager:
 
     def infer(self, images, velocity):
         if self.drivable_model is not None:
+            # original rgb for human readable
+            orig_rgb = None
+            if self.options["human_readable"]:
+                orig_rgb = np.array(images).reshape(-1, *images[0][0].shape).transpose((0, 3, 1, 2))
+
             # imagenet normalization
             dtype = np.float32
             x = np.array(images, dtype=dtype) / 255
@@ -54,7 +59,7 @@ class PerceptionManager:
 
             if self.options["human_readable"]:
                 num_sensors += 1
-                drivable = np.concatenate([drivable, ((x + 1) / 2 * 255).astype(np.uint8)])
+                drivable = np.concatenate([drivable, orig_rgb])
 
             # resize
             target_size = self.options["target_size"]
