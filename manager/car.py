@@ -93,8 +93,11 @@ class CarManager:
 
             for pt in spawn_point_list:
                 spawn_point = pt
-                car_actor = world.try_spawn_actor(car_blueprint, spawn_point)
-                if car_actor is not None:
+                result = client.apply_batch_sync([
+                    carla.command.SpawnActor(car_blueprint, spawn_point)
+                    .then(carla.command.SetAutopilot(carla.command.FutureActor, True, tm_port))], True)
+                if result:
+                    car_actor = world.get_actor(result[0].actor_id)
                     break
 
             # if cannot spawn
@@ -102,6 +105,10 @@ class CarManager:
 
             # remove spawn point
             spawn_point_list.remove(spawn_point)
+
+            # set tm configuration
+            client.get_trafficmanager().ignore_lights_percentage(car_actor, 100)
+            client.get_trafficmanager().ignore_signs_percentage(car_actor, 100)
 
             # create car instance
             self.cars.append(Car(self.car_options, self.car_reward_weights, car_actor, world))
