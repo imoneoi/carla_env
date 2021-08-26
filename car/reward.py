@@ -130,8 +130,8 @@ class CarReward:
         reward += reward_speed * reward_dist_center * reward_angle
         assert not np.isnan(reward)
 
-        print("speed {:.2f} dist {:.2f} angle {:.2f} steer {:.2f}".format(
-            reward_speed, reward_dist_center, reward_angle, steer_abs))
+        # print("speed {:.2f} dist {:.2f} angle {:.2f} steer {:.2f}".format(
+        #     reward_speed, reward_dist_center, reward_angle, steer_abs))
 
         # Done: critical infraction
         done = is_collision | is_invasion_double_solid
