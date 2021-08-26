@@ -25,7 +25,7 @@ class ServerManager:
             "retries_on_error": 60,
             "timeout": 5,
 
-            "tm_hybrid_physics_mode": True
+            "tm_hybrid_physics_mode": False
         }
 
         self.options.update(global_options.get("server", {}))
