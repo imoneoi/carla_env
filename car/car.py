@@ -181,7 +181,8 @@ class Car:
                 steer=steer,
             )
 
-        self.actor.apply_control(action)
+        if action is not None:
+            self.actor.apply_control(action)
 
     def get_observation(self):
         # return images
