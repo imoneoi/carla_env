@@ -17,7 +17,7 @@ class WorldManager:
             "map_list": [x for x in server_manager.get().get_available_maps()
                          if (not x.endswith("_Opt")) and (not "HD" in x)],
             "map_lifetime": 5,
-            "server_lifetime": 10,
+            "server_lifetime": 1000000,
 
             "weather_list": [k for k, v in vars(carla.WeatherParameters).items()
                              if isinstance(v, carla.WeatherParameters)]
