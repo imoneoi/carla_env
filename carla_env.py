@@ -69,7 +69,7 @@ class CarlaEnv(gym.Env, abc.ABC):
         # reset managers
         self.server_manager.reset()
         self.world_manager.reset()
-        self.car_manager.reset(self.server_manager.get(), self.server_manager.tm_port)
+        self.car_manager.reset(self.server_manager.get(), self.server_manager.tm_port, self.server_manager.tm)
 
         # get observation
         return self._get_observation()

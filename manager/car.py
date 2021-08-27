@@ -51,7 +51,8 @@ class CarManager:
 
     def reset(self,
               client: carla.Client,
-              tm_port: int):
+              tm_port: int,
+              tm: carla.TrafficManager):
         # destroy existing cars
         self.destroy_all_cars()
         # assign client
@@ -107,8 +108,8 @@ class CarManager:
             spawn_point_list.remove(spawn_point)
 
             # set tm configuration
-            client.get_trafficmanager().ignore_lights_percentage(car_actor, 100)
-            client.get_trafficmanager().ignore_signs_percentage(car_actor, 100)
+            tm.ignore_lights_percentage(car_actor, 100)
+            tm.ignore_signs_percentage(car_actor, 100)
 
             # create car instance
             self.cars.append(Car(self.car_options, self.car_reward_weights, car_actor, world))
