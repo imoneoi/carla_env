@@ -23,7 +23,7 @@ class ServerManager:
             "resolution_y": 320,
 
             "retries_on_error": 60,
-            "timeout": 5,
+            "timeout": 120,
 
             "tm_hybrid_physics_mode": False
         }
