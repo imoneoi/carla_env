@@ -62,8 +62,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("save_path", type=str, help="Path to save dataset")
     parser.add_argument("--n", type=int, default=int(2e5), help="Number of steps to collect")
-    parser.add_argument("--n_jobs", type=int, default=15, help="Number of worker processes")
-    parser.add_argument("--devices", type=str, default="0,1,2", help="GPUs to use")
+    parser.add_argument("--n_jobs", type=int, default=10, help="Number of worker processes")
+    parser.add_argument("--devices", type=str, default="0,1", help="GPUs to use")
 
     args = parser.parse_args()
 
