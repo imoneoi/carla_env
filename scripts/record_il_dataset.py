@@ -17,7 +17,7 @@ def record_dataset(
         gpu_index: int,
 
         eps: float = 0.2,
-        rand_action_range: float = 0.5,
+        rand_action_range: float = 0.1,
 ):
     # set gpu index
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
