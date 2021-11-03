@@ -10,10 +10,10 @@ import threading
 
 class Car:
     def __init__(self,
-                 options: dict,
-                 reward_weights: dict,
-                 actor: carla.Vehicle,
-                 world: carla.World):
+                options: dict,
+                reward_weights: dict,
+                actor: carla.Vehicle,
+                world: carla.World):
         # default options
         self.options = {
             "camera_x": 640,
