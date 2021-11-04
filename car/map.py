@@ -7,9 +7,9 @@ import numpy as np
 
 class CarMap:
     def __init__(self,
-                 car,
-                 world: carla.World,
-                 options: dict):
+                car,
+                world: carla.World,
+                options: dict):
         self.options = {
             # Map
             "pixels_per_meter": 10,

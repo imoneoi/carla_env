@@ -50,9 +50,11 @@ class Car:
         self.reward = CarReward(self, reward_weights, self.options.get("reward", {}))
 
     def destroy(self):
+        # destroy cameras and other sensors
         [cam.destroy() for cam in self.cameras]
         [sensor.destroy() for sensor in self.sensors]
 
+        # destroy the vehicle
         self.actor.destroy()
 
     def set_camera_pos(self):
@@ -84,11 +86,12 @@ class Car:
         cam_blueprint.set_attribute('image_size_y', str(self.options["camera_y"]))
         cam_blueprint.set_attribute('enable_postprocess_effects', str(self.options["camera_postprocess"]))
 
+        # attach the camera to the vehicle rigidly
         for cam_id, cam_pos in enumerate(self.camera_pos):
             cam = self.world.spawn_actor(cam_blueprint,
-                                         cam_pos,
-                                         attach_to=self.actor,
-                                         attachment_type=carla.AttachmentType.Rigid)
+                                        cam_pos,
+                                        attach_to=self.actor,
+                                        attachment_type=carla.AttachmentType.Rigid)
             weak_self = weakref.ref(self)
             cam.listen(lambda img: Car._camera_callback(weak_self, cam_id, img))
 
@@ -106,7 +109,7 @@ class Car:
             return
 
         # convert image
-        # extract rgba image from carla_img
+        # extract rgba(4 channels) image from carla_img
         img = np.frombuffer(carla_img.raw_data, dtype=np.dtype("uint8"))
         img = np.reshape(img, (carla_img.height, carla_img.width, 4))
         # extract rgb channel
@@ -177,7 +180,6 @@ class Car:
             action = carla.VehicleControl(
                 throttle=max(0.0, accel),
                 brake=-min(0.0, accel),
-
                 steer=steer,
             )
 

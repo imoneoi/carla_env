@@ -10,7 +10,6 @@ def _collision_callback(car_id, event):
 
     COLLISION_STATE[car_id] = True
 
-
 def test_collision_sensor(
         num_cars: int = 100,
         num_test_rounds: int = 100,
