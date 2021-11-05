@@ -29,7 +29,7 @@ def test_collision_sensor(
         # Clear collision state
         COLLISION_STATE = np.zeros(num_cars, dtype=np.bool)
 
-        # Load world
+        # Load world # TODO select the map
         world = client.load_world('Town04')
 
         # Synchronous tick mode
