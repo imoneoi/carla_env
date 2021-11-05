@@ -16,3 +16,7 @@ Solution: Blacklist these cars
 
 
 ## 2. dt gap? simulator dt != real dt
+
+## 3. Memory Leakage
+
+Solution: limit the server lifetime < 10
