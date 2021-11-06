@@ -8,23 +8,25 @@ from manager.server import ServerManager
 
 class WorldManager:
     def __init__(self,
-                 global_options: dict,
-                 server_manager: ServerManager):
+                global_options: dict,
+                server_manager: ServerManager):
         # default options
         self.options = {
             "dt": 0.1,
 
+            # TODO: choose maps from the list (No layered or HD Map)
             "map_list": [x for x in server_manager.get().get_available_maps()
-                         if (not x.endswith("_Opt")) and (not "HD" in x)],
+                        if (not x.endswith("_Opt")) and (not "HD" in x)],
             "map_lifetime": 5,
-            # 10
+            # TODO: prevent the memory leakage
             "server_lifetime": 10,
 
             "weather_list": [k for k, v in vars(carla.WeatherParameters).items()
-                             if isinstance(v, carla.WeatherParameters)]
+                            if isinstance(v, carla.WeatherParameters)]
         }
 
-        self.options.update(global_options.get("world", {}))
+        # self.options.update(global_options.get("world", {}))
+        self.options.update(global_options)
 
         # world
         self.server_manager = server_manager
@@ -42,7 +44,7 @@ class WorldManager:
         return self.world
 
     def reset(self):
-        # change map
+        # TODO: change map when world is None or map age > map lifetime
         if (self.world is None) or (self.map_age >= self.options["map_lifetime"]):
             # reset server if required
             self.server_age += 1
