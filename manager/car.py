@@ -142,7 +142,7 @@ class CarManager:
             if walker_blueprint.has_attribute("is_invincible"):
                 walker_blueprint.set_attribute("is_invincible", "false")
             batch_op.append(carla.command.SpawnActor(walker_blueprint,
-                                                     carla.Transform(world.get_random_location_from_navigation())))
+                                                    carla.Transform(world.get_random_location_from_navigation())))
 
         result = client.apply_batch_sync(batch_op, True)
 
