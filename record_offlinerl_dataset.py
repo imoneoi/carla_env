@@ -22,13 +22,13 @@ def record_dataset(
     # set gpu index
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
 
-    # global_config = {}
-    # # TODO: when recording real dataset, fix the map and ensure its lifetime to be enough
-    # if save_path != "./dataset/sim":
-    #     global_config = {"map_list" : ['Town01'], "map_lifetime" : n_steps}
+    global_config = {}
+    # TODO: when recording real dataset, freeze the map and ensure its lifetime to be enough
+    if save_path.split('/')[-1] == "real":
+        global_config = {"world":{"map_list" : ['Town01'], "map_lifetime" : n_steps}}
 
-    # TODO: when recording real dataset, fix the map and ensure its lifetime to be enough
-    global_config = {"map_list" : ['Town01'], "map_lifetime" : n_steps}
+    # # TODO: when recording real dataset, fix the map and ensure its lifetime to be enough
+    # global_config = {"world":{"map_list" : ['Town01'], "map_lifetime" : n_steps}}
     
     # TODO: create an env for single car
     env = create_wrapped_carla_single_car_env(global_config=global_config, gpu_index=gpu_index)

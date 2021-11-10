@@ -25,8 +25,8 @@ class WorldManager:
                             if isinstance(v, carla.WeatherParameters)]
         }
 
-        # self.options.update(global_options.get("world", {}))
-        self.options.update(global_options)
+        self.options.update(global_options.get("world", {}))
+        # self.options.update(global_options)
 
         # world
         self.server_manager = server_manager
