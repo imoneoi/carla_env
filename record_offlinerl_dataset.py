@@ -25,7 +25,7 @@ def record_dataset(
     global_config = {}
     # TODO: when recording real dataset, freeze the map and ensure its lifetime to be enough
     if save_path.split('/')[-1] == "real":
-        global_config = {"world":{"map_list" : ['Town01'], "map_lifetime" : n_steps}}
+        global_config = {"world":{"map_list" : ['/Game/Carla/Maps/Town01'], "map_lifetime" : n_steps, "weather_list": ["Default"]}}
 
     # # TODO: when recording real dataset, fix the map and ensure its lifetime to be enough
     # global_config = {"world":{"map_list" : ['Town01'], "map_lifetime" : n_steps}}
@@ -78,6 +78,7 @@ def main():
     parser.add_argument("--n", type=int, default=int(2e5), help="Number of steps to collect")
     parser.add_argument("--n_jobs", type=int, default=10, help="Number of worker processes")
     parser.add_argument("--devices", type=str, default="0,1", help="GPUs to use")
+    parser.add_argument("--eps", type=str, default="0.2", help="Probability for random actions")
 
     args = parser.parse_args()
 
@@ -85,10 +86,11 @@ def main():
     devices = list(map(int, args.devices.split(",")))
     n_jobs = args.n_jobs
     step_per_job = args.n // n_jobs
+    eps = args.eps
 
     processes = []
     for job_id in range(n_jobs):
-        save_path = os.path.join("./dataset", args.save_path, str(job_id))
+        save_path = os.path.join("../dataset", args.save_path, str(job_id))
         os.makedirs(save_path, exist_ok=True)
 
         gpu_index = devices[job_id % len(devices)]
@@ -96,7 +98,8 @@ def main():
         processes.append(mp.Process(target=record_dataset, kwargs={
             "save_path": save_path,
             "n_steps": step_per_job,
-            "gpu_index": gpu_index
+            "gpu_index": gpu_index,
+            "eps": eps
         }))
 
     # start & wait all processes

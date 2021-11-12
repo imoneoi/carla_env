@@ -16,14 +16,57 @@ class Car:
                 world: carla.World):
         # default options
         self.options = {
+            # camera properties
             "camera_x": 640,
             "camera_y": 320,
-            "camera_postprocess": False
+            "camera_postprocess": False,
+
+            # vehicle physics properties
+            "max_rpm": 5000.0,
+            "center_of_mass": carla.Vector3D(0.0,0.0,0.0),
+            "torque_curve": [[0, 500], [5000, 500]],
+            "moi": 1.0,
+            "damping_rate_full_throttle": 0.15,
+            "damping_rate_zero_throttle_clutch_engaged": 2.0,
+            "damping_rate_zero_throttle_clutch_disengaged": 0.35,
+            "use_gear_autobox": True,
+            "gear_switch_time": 0.5,
+            "clutch_strength": 10.0,
+            "final_ratio": 4.0,
+            # gears: ratio=1.0, down_ratio=0.5, up_ratio=0.65
+            "forward_gears": [carla.GearPhysicsControl(1.0, 0.5, 0.65)],
+            "drag_coefficient": 0.3,
+            "steering_curve": [[0.0, 1.0], [10.0, 0.5]], 
+            # wheels: tire_friction=2.0, damping_rate=0.25, max_steer_angle=70.0, radius=30.0, max_brake_torque=1500.0, max_handbrake_torque=3000.0, position=(0.0,0.0,0.0)
+            "wheels": [carla.WheelPhysicsControl(2.0, 0.25, 70.0, 30.0, 1500.0, 3000.0, carla.Vector3D(0.0,0.0,0.0))], 
+            "use_sweep_wheel_collision": False, 
+            "mass": 1000.0
         }
         self.options.update(options)
 
         # actor
         self.actor = actor
+        self.actor.apply_physics_control(
+            carla.VehiclePhysicsControl(
+                max_rpm=self.options["max_rpm"], 
+                center_of_mass=self.options["center_of_mass"],
+                torque_curve=self.options["torque_curve"],
+                moi=self.options["moi"],
+                damping_rate_full_throttle=self.options["damping_rate_full_throttle"],
+                damping_rate_zero_throttle_clutch_engaged=self.options["damping_rate_zero_throttle_clutch_engaged"],
+                damping_rate_zero_throttle_clutch_disengaged=self.options["damping_rate_zero_throttle_clutch_disengaged"],
+                use_gear_autobox=self.options["use_gear_autobox"],
+                gear_switch_time=self.options["gear_switch_time"],
+                clutch_strength=self.options["clutch_strength"],
+                final_ratio=self.options["final_ratio"],
+                forward_gears=self.options["forward_gears"],
+                drag_coefficient=self.options["drag_coefficient"],
+                steering_curve=self.options["steering_curve"],
+                wheels=self.options["wheels"],
+                use_sweep_wheel_collision=self.options["use_sweep_wheel_collision"],
+                mass=self.options["mass"]
+                )
+            )
         self.world = world
 
         # cameras

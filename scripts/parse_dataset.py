@@ -42,6 +42,7 @@ def parse():
     print(steer_leftmax)
     print(rew_max)
     print(rew_min)  
+    print(rew_max)
 
     # # TODO: plot actions distribution in the dataset
     # a = pd.DataFrame(actions, columns=['Accelerate', 'Steer'])
