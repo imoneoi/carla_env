@@ -1,6 +1,6 @@
 from scripts.util.joystick import Joystick
 from carla_env import CarlaEnv
-from wrapped_carla_env import BiasedAction
+from scripts.wrapped_carla_env import BiasedAction
 
 import time
 import carla

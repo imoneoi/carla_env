@@ -1,4 +1,4 @@
-from wrapped_carla_env import create_wrapped_carla_single_car_env
+from scripts.wrapped_carla_env import create_wrapped_carla_single_car_env
 
 
 def main():
