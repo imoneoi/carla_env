@@ -15,7 +15,7 @@ class ServerManager:
         # default options
         self.options = {
             "path": os.path.abspath(os.path.join(
-                os.path.dirname(__file__), "../../CARLA_0.9.11/CarlaUE4.sh")),
+                os.path.dirname(__file__), "../../../../carla0.9.13/CarlaUE4.sh")),
 
             "quality": "Low",
 
