@@ -2,7 +2,9 @@ import random
 
 import gym
 import numpy as np
+import sys
 
+sys.path.append("..")
 from carla_env import CarlaEnv
 
 
