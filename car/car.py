@@ -38,7 +38,7 @@ class Car:
             "drag_coefficient": 0.3,
             "steering_curve": [[0.0, 1.0], [10.0, 0.5]], 
             # wheels: tire_friction=2.0, damping_rate=0.25, max_steer_angle=70.0, radius=30.0, max_brake_torque=1500.0, max_handbrake_torque=3000.0, position=(0.0,0.0,0.0)
-            "wheels": [carla.WheelPhysicsControl(2.0, 0.25, 70.0, 30.0, 1500.0, 3000.0, carla.Vector3D(0.0,0.0,0.0))], 
+            "wheels": [carla.WheelPhysicsControl(2.0, 0.25, 70.0, 30.0, 1500.0, 3000.0, 2.0, 17.0, 1000.0, carla.Vector3D(0.0,0.0,0.0))], # add args for 0.9.11->0.9.13
             "use_sweep_wheel_collision": False, 
             "mass": 1000.0
         }
