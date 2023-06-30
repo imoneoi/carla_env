@@ -11,20 +11,23 @@ import carla
 from tqdm import tqdm
 import cv2
 import json
+import ipdb
 
 def record_dataset(
         save_path: str,
         n_steps: int,
         gpu_index: int,
 
-        eps: float = 0.2,
-        rand_action_range: float = 0.1,
+        eps: float,
+        rand_action_range: float,
 ):
     # set gpu index
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
+    
+    global_config = {"world":{"map_list" : ['Town01'], "map_lifetime" : n_steps}}
 
     # step env
-    env = create_wrapped_carla_single_car_env(global_config={}, gpu_index=gpu_index)
+    env = create_wrapped_carla_single_car_env(global_config=global_config, gpu_index=gpu_index)
     obs = env.reset()
     for step in tqdm(range(n_steps)):
         if random.random() < eps:
@@ -39,6 +42,7 @@ def record_dataset(
                 carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, True, env.unwrapped.server_manager.tm_port)
             ])
         else:
+            ipdb.set_trace()
             next_obs, rew, done, info = env.step([None])
             # get act
             car_control = env.unwrapped.car_manager.cars[0].actor.get_control()
@@ -64,6 +68,8 @@ def main():
     parser.add_argument("--n", type=int, default=int(2e1), help="Number of steps to collect")
     parser.add_argument("--n_jobs", type=int, default=10, help="Number of worker processes")
     parser.add_argument("--devices", type=str, default="0", help="GPUs to use")
+    parser.add_argument("--eps", type=float, default=0.2, help="Probability to randomly perturb AutoPilot actions")
+    parser.add_argument("--rand_action_range", type=float, default=0.1, help="Perturbation range")
 
     args = parser.parse_args()
 
@@ -82,7 +88,9 @@ def main():
         processes.append(mp.Process(target=record_dataset, kwargs={
             "save_path": save_path,
             "n_steps": step_per_job,
-            "gpu_index": gpu_index
+            "gpu_index": gpu_index,
+            "eps": args.eps,
+            "rand_action_range": args.rand_action_range
         }))
 
     # start & wait all processes
