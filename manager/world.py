@@ -48,7 +48,9 @@ class WorldManager:
         if (self.world is None) or (self.map_age >= self.options["map_lifetime"]):
             # reset server if required
             self.server_age += 1
+            print("server age: ", self.server_age)
             if self.server_age >= self.options["server_lifetime"]:
+                print("server age reaches the life limit!")
                 self.server_manager.cleanup()
                 exit(-1)
 
@@ -56,7 +58,9 @@ class WorldManager:
 
             # create world
             self.world = self.server_manager.get().load_world(np.random.choice(self.options["map_list"]))
+            print("get world")
             self.map = self.world.get_map()
+            print("get map")
             # set sync mode
             settings = self.world.get_settings()
             settings.synchronous_mode = True
@@ -64,13 +68,16 @@ class WorldManager:
 
             settings.no_rendering_mode = True
             self.world.apply_settings(settings)
+            print("set sync mode")
 
             # update world
             self.world.tick()
+            print("update world")
 
             # clear map age
             self.map_age = 0
 
+        
         self.map_age += 1
 
         # change weather

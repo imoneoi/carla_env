@@ -63,13 +63,18 @@ class CarlaEnv(gym.Env, abc.ABC):
         if not self.initialized:
             self.init()
 
+        print("initialized")
         # destroy all existing cars
         self.car_manager.destroy_all_cars()
 
         # reset managers
+        print("before reset")
         self.server_manager.reset()
+        print("server reset")
         self.world_manager.reset()
+        print("world reset")
         self.car_manager.reset(self.server_manager.get(), self.server_manager.tm_port, self.server_manager.tm)
+        print("car reset")
 
         # get observation
         return self._get_observation()

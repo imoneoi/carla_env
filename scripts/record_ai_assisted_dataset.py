@@ -12,6 +12,7 @@ from tqdm import tqdm
 import cv2
 import json
 import ipdb
+import pdb
 
 def record_dataset(
         save_path: str,
@@ -24,12 +25,17 @@ def record_dataset(
     # set gpu index
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
     
+    # fix the map
     global_config = {"world":{"map_list" : ['Town01'], "map_lifetime" : n_steps}}
 
     # step env
     env = create_wrapped_carla_single_car_env(global_config=global_config, gpu_index=gpu_index)
+    print(-1)
+    # ipdb.set_trace()
     obs = env.reset()
+    print("reset obs!")
     for step in tqdm(range(n_steps)):
+        print(1)
         if random.random() < eps:
             # eps-greedy act
             act = env.action_space.sample() * rand_action_range
@@ -42,10 +48,12 @@ def record_dataset(
                 carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, True, env.unwrapped.server_manager.tm_port)
             ])
         else:
-            ipdb.set_trace()
+            print(2)
             next_obs, rew, done, info = env.step([None])
+            print("step!")
             # get act
             car_control = env.unwrapped.car_manager.cars[0].actor.get_control()
+            print("get control signal!")
             act = [car_control.throttle - car_control.brake, car_control.steer]
 
             # save obs & act
@@ -54,11 +62,14 @@ def record_dataset(
             with open(os.path.join(save_path, "{}.json".format(step)), "wt") as f:
                 json.dump({"act": act}, f)
                 f.close()
+            print("Recorded!")
 
         # next & done reset
         obs = next_obs
         if done:
+            print("done!")
             obs = env.reset()
+            print("reset!")
 
 
 def main():
