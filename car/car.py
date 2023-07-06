@@ -20,6 +20,11 @@ class Car:
             "camera_x": 640,
             "camera_y": 320,
             "camera_postprocess": False,
+            # bev camera properties
+            "bev_camera_x": 800,
+            "bev_camera_y": 600,
+            "bev_fov": 90,
+            "bev_camera_height": 40.0,
 
             # vehicle physics properties
             "max_rpm": 5000.0,
@@ -74,6 +79,11 @@ class Car:
         self.cameras = []
         self.camera_images = []
         self.camera_event = []
+        # bev cameras
+        self.bev_camera_pos = []
+        self.bev_cameras = []
+        self.bev_camera_images = []
+        self.bev_camera_event = []
 
         self.set_camera_pos()
         self.create_cameras()
@@ -102,9 +112,10 @@ class Car:
 
     def set_camera_pos(self):
         self.camera_pos = []
+        self.bev_camera_pos = []
 
-        # front camera
         car_extent_x = self.actor.bounding_box.extent.x
+        # front camera
         self.camera_pos.append(carla.Transform(
             carla.Location(
                 x=car_extent_x + np.random.uniform(0, 1.0),
@@ -117,19 +128,42 @@ class Car:
                 roll=np.random.uniform(-1.0, 1.0),
             )
         ))
+        
+        # BEV camera
+        self.bev_camera_pos.append(carla.Transform(
+            carla.Location(
+                x=0.0,
+                y=0.0,
+                z=self.options["bev_camera_height"],
+            ),
+            carla.Rotation(
+                yaw=0.0,
+                pitch=-90.0,
+                roll=0.0,
+            )
+        ))
 
     def create_cameras(self):
         self.cameras = []
         self.camera_images = []
         self.camera_event = []
+        
+        self.bev_cameras = []
+        self.bev_camera_images = []
+        self.bev_camera_event = []
 
         # create blueprint
         cam_blueprint = self.world.get_blueprint_library().find('sensor.camera.rgb')
         cam_blueprint.set_attribute('image_size_x', str(self.options["camera_x"]))
         cam_blueprint.set_attribute('image_size_y', str(self.options["camera_y"]))
         cam_blueprint.set_attribute('enable_postprocess_effects', str(self.options["camera_postprocess"]))
+        
+        bev_blueprint = self.world.get_blueprint_library().find('sensor.camera.rgb')
+        bev_blueprint.set_attribute('image_size_x', str(self.options["bev_camera_x"]))
+        bev_blueprint.set_attribute('image_size_y', str(self.options["bev_camera_y"]))
+        bev_blueprint.set_attribute('bev_fov', str(self.options["bev_fov"]))
 
-        # attach the camera to the vehicle rigidly
+        # attach the cameras to the vehicle rigidly
         for cam_id, cam_pos in enumerate(self.camera_pos):
             cam = self.world.spawn_actor(cam_blueprint,
                                         cam_pos,
@@ -141,6 +175,19 @@ class Car:
             self.cameras.append(cam)
             self.camera_images.append(None)
             self.camera_event.append(threading.Event())
+            
+        # attach the bev cameras to the vehicle rigidly
+        for bev_cam_id, bev_cam_pos in enumerate(self.bev_camera_pos):
+            bev_cam = self.world.spawn_actor(bev_blueprint,
+                                        bev_cam_pos,
+                                        attach_to=self.actor,
+                                        attachment_type=carla.AttachmentType.Rigid)
+            weak_self = weakref.ref(self)
+            bev_cam.listen(lambda bev_img: Car._bev_camera_callback(weak_self, bev_cam_id, bev_img))
+
+            self.bev_cameras.append(bev_cam)
+            self.bev_camera_images.append(None)
+            self.bev_camera_event.append(threading.Event())
 
     @staticmethod
     def _camera_callback(weak_self, cam_id, carla_img):
@@ -165,6 +212,30 @@ class Car:
 
         # trigger semaphore
         self.camera_event[cam_id].set()
+        
+    @staticmethod
+    def _bev_camera_callback(weak_self, cam_id, carla_img):
+        """
+        WARNING: This Function is Executed in different thread!
+        """
+        self = weak_self()
+        if not self:
+            return
+
+        # convert image
+        # extract rgba(4 channels) image from carla_img
+        img = np.frombuffer(carla_img.raw_data, dtype=np.dtype("uint8"))
+        img = np.reshape(img, (carla_img.height, carla_img.width, 4))
+        # extract rgb channel
+        img = img[:, :, :3]
+        # bgr to rgb
+        img = img[:, :, ::-1]
+
+        # save image
+        self.bev_camera_images[cam_id] = img
+
+        # trigger semaphore
+        self.bev_camera_event[cam_id].set()
 
     def create_collision_sensor(self):
         # collision
@@ -204,11 +275,11 @@ class Car:
 
     def sync_before_tick(self):
         # clear events
-        [event.clear() for event in self.camera_event]
+        [event.clear() for event in self.camera_event and self.bev_camera_event]
 
     def sync_after_tick(self):
         # acquire events
-        [event.wait() for event in self.camera_event]
+        [event.wait() for event in self.camera_event and self.bev_camera_event]
 
     def sync_clear_events(self):
         # clear events
@@ -231,7 +302,7 @@ class Car:
 
     def get_observation(self):
         # return images
-        return self.camera_images, self.actor.get_velocity()
+        return self.camera_images, self.bev_camera_images, self.actor.get_velocity()
 
     def get_reward_done(self, world_map):
         result = self.reward.get_reward_done(world_map)
