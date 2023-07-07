@@ -27,17 +27,20 @@ class PerceptionManager:
         if "drivable_model" in self.options:
             self.drivable_model = onnxruntime.InferenceSession(self.options["drivable_model"])
 
-    def infer(self, images, velocity):
+    def infer(self, images, bev_images, velocity):
         if self.drivable_model is not None:
             # original rgb for human readable
             orig_rgb = None
             if self.options["human_readable"]:
                 orig_rgb = np.array(images).reshape(-1, *images[0][0].shape).transpose((0, 3, 1, 2))
+                # orig_bev_rgb = np.array(bev_images).reshape(-1, *bev_images[0][0].shape).transpose((0, 3, 1, 2))
 
             # imagenet normalization
             dtype = np.float32
             x = np.array(images, dtype=dtype) / 255
             x = (x - np.array([0.485, 0.456, 0.406], dtype=dtype)) / np.array([0.229, 0.224, 0.225], dtype=dtype)
+            # bev_x = np.array(bev_images, dtype=dtype) / 255
+            # bev_x = (bev_x - np.array([0.485, 0.456, 0.406], dtype=dtype)) / np.array([0.229, 0.224, 0.225], dtype=dtype)
 
             # split batch
             num_cars, num_sensors = x.shape[:2]
@@ -74,5 +77,8 @@ class PerceptionManager:
             img_resized = np.array([
                 cv2.resize(img, target_size, interpolation=cv2.INTER_LINEAR)
                 for img in images[0]]).transpose((0, 3, 1, 2))
+            bev_img_resized = np.array([
+                cv2.resize(img, target_size, interpolation=cv2.INTER_LINEAR)
+                for img in bev_images[0]]).transpose((0, 3, 1, 2))
 
-            return np.expand_dims(img_resized, 0)
+            return np.expand_dims(img_resized, 0), np.expand_dims(bev_img_resized, 0)
