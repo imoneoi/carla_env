@@ -19,7 +19,7 @@ class WorldManager:
                         if (not x.endswith("_Opt")) and (not "HD" in x)],
             "map_lifetime": 5,
             # TODO: prevent the memory leakage
-            "server_lifetime": 2,
+            "server_lifetime": 10,
 
             "weather_list": [k for k, v in vars(carla.WeatherParameters).items()
                             if isinstance(v, carla.WeatherParameters)]
