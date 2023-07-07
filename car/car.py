@@ -161,7 +161,7 @@ class Car:
         bev_blueprint = self.world.get_blueprint_library().find('sensor.camera.rgb')
         bev_blueprint.set_attribute('image_size_x', str(self.options["bev_camera_x"]))
         bev_blueprint.set_attribute('image_size_y', str(self.options["bev_camera_y"]))
-        bev_blueprint.set_attribute('bev_fov', str(self.options["bev_fov"]))
+        bev_blueprint.set_attribute('fov', str(self.options["bev_fov"]))
 
         # attach the cameras to the vehicle rigidly
         for cam_id, cam_pos in enumerate(self.camera_pos):
