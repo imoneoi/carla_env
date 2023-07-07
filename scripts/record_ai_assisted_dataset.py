@@ -4,6 +4,7 @@ import multiprocessing as mp
 import random
 import datetime
 import sys
+import re
 
 from wrapped_carla_env import create_wrapped_carla_single_car_env
 
@@ -13,6 +14,14 @@ import cv2
 import json
 import ipdb
 import pdb
+
+# import sys
+
+# # Get the step number from the command line argument
+# if len(sys.argv) > 1:
+#     INITIAL_STEP = int(sys.argv[1])
+# else:
+#     INITIAL_STEP = 0
 
 def record_dataset(
         save_path: str,
@@ -26,15 +35,40 @@ def record_dataset(
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
     
     # fix the map
-    global_config = {"world":{"map_list" : ['Town05'], "map_lifetime" : n_steps}}
+    global_config = {"server": {"quality": "High"}, "world":{"map_list" : ['Town05'], "map_lifetime" : n_steps}}
 
     # step env
     env = create_wrapped_carla_single_car_env(global_config=global_config, gpu_index=gpu_index)
-    print(-1)
-    # ipdb.set_trace()
+    
+    # step calculator bridging this process and the last exiting one
+    step_file = "./step.txt"
+    try:
+        # Try opening the existing step file
+        with open(step_file, "r+") as f:
+            if f.read():
+                digits_only = re.sub(r'\D', '', f.read())
+                if digits_only:
+                    prev_step = int(digits_only)
+                else:
+                    prev_step = 0
+                f.write(str(prev_step))
+                # filtered_digits = [char for char in f.read() if char.isdigit()]
+                # print(filtered_digits)
+                # prev_step = int(''.join(filtered_digits))
+                # prev_step = int(f.read().strip())
+            else:
+                prev_step = 0
+                f.write(str(0))
+    except FileNotFoundError:
+        # Create a new step file if it doesn't exist
+        with open(step_file, "w") as f:
+            f.write(str(0))
+            prev_step = 0
+            
+            
     obs, bev_obs = env.reset()
-    print("reset obs!")
-    for step in tqdm(range(n_steps)):
+    print("initial reset!")
+    for step in tqdm(range(1, n_steps)):
         if random.random() < eps:
             # eps-greedy act
             act = env.action_space.sample() * rand_action_range
@@ -55,15 +89,19 @@ def record_dataset(
             # save obs, bev_obs & act
             obs_cv = cv2.cvtColor(obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
             bev_obs_cv = cv2.cvtColor(bev_obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
-            cv2.imwrite(os.path.join(save_path, "front_rgb_{}.jpg".format(step)), obs_cv)
-            cv2.imwrite(os.path.join(save_path, "bev_rgb_{}.jpg".format(step)), bev_obs_cv)
-            with open(os.path.join(save_path, "{}.json".format(step)), "wt") as f:
+            # cv2.imwrite(os.path.join(save_path, "front_rgb_{}.jpg".format(prev_step + step)), obs_cv)
+            cv2.imwrite(os.path.join(save_path, "bev_rgb_{}.jpg".format(prev_step + step)), bev_obs_cv)
+            # do not erase the previously recorded data
+            with open(os.path.join(save_path, "{}.json".format(prev_step + step)), "wt") as f:
                 json.dump({"act": act}, f)
                 f.close()
             # print("Recorded!")
 
         # next & done reset
         obs, bev_obs = next_obs, next_bev_obs
+        # Save the collection step to a file before potential exiting
+        with open(step_file, "w") as f:
+            f.write(str(prev_step + step))
         if done:
             print("done!")
             obs, bev_obs = env.reset()
@@ -73,7 +111,7 @@ def record_dataset(
 def main():
     nowTime = datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')
     parser = argparse.ArgumentParser()
-    parser.add_argument("--save_path", default="../dataset/{}".format(nowTime), type=str, help="Path to save dataset")
+    parser.add_argument("--save_path", default="../dataset/bev_230706", type=str, help="Path to save dataset")
     parser.add_argument("--n", type=int, default=int(2e1), help="Number of steps to collect")
     parser.add_argument("--n_jobs", type=int, default=10, help="Number of worker processes")
     parser.add_argument("--devices", type=str, default="0", help="GPUs to use")
