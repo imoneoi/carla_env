@@ -18,7 +18,7 @@ class SingleCarWrapper(gym.ObservationWrapper):
 
     def observation(self, observation):
         # (N_car, N_sensor, C, H, W) --> (C, H, W)
-        return observation.reshape(-1, observation.shape[-2], observation.shape[-1])
+        return observation[0].reshape(-1, observation[0].shape[-2], observation[0].shape[-1]), observation[1].reshape(-1, observation[1].shape[-2], observation[1].shape[-1])
 
 
 class MeanReward(gym.RewardWrapper):
