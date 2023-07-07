@@ -35,7 +35,6 @@ def record_dataset(
     obs, bev_obs = env.reset()
     print("reset obs!")
     for step in tqdm(range(n_steps)):
-        print(1)
         if random.random() < eps:
             # eps-greedy act
             act = env.action_space.sample() * rand_action_range
@@ -48,12 +47,9 @@ def record_dataset(
                 carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, True, env.unwrapped.server_manager.tm_port)
             ])
         else:
-            print(2)
             (next_obs, next_bev_obs), rew, done, info = env.step([None])
-            print("step!")
             # get act
             car_control = env.unwrapped.car_manager.cars[0].actor.get_control()
-            print("get control signal!")
             act = [car_control.throttle - car_control.brake, car_control.steer]
 
             # save obs, bev_obs & act
@@ -64,13 +60,13 @@ def record_dataset(
             with open(os.path.join(save_path, "{}.json".format(step)), "wt") as f:
                 json.dump({"act": act}, f)
                 f.close()
-            print("Recorded!")
+            # print("Recorded!")
 
         # next & done reset
         obs, bev_obs = next_obs, next_bev_obs
         if done:
             print("done!")
-            obs = env.reset()
+            obs, bev_obs = env.reset()
             print("reset!")
 
 
