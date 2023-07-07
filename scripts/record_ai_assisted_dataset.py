@@ -32,7 +32,7 @@ def record_dataset(
     env = create_wrapped_carla_single_car_env(global_config=global_config, gpu_index=gpu_index)
     print(-1)
     # ipdb.set_trace()
-    obs = env.reset()
+    obs, bev_obs = env.reset()
     print("reset obs!")
     for step in tqdm(range(n_steps)):
         print(1)
@@ -43,29 +43,31 @@ def record_dataset(
             env.unwrapped.server_manager.client.apply_batch_sync([
                 carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, False, env.unwrapped.server_manager.tm_port)
             ])
-            next_obs, rew, done, info = env.step([act])
+            next_obs, next_bev_obs, rew, done, info = env.step([act])
             env.unwrapped.server_manager.client.apply_batch_sync([
                 carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, True, env.unwrapped.server_manager.tm_port)
             ])
         else:
             print(2)
-            next_obs, rew, done, info = env.step([None])
+            next_obs, next_bev_obs, rew, done, info = env.step([None])
             print("step!")
             # get act
             car_control = env.unwrapped.car_manager.cars[0].actor.get_control()
             print("get control signal!")
             act = [car_control.throttle - car_control.brake, car_control.steer]
 
-            # save obs & act
+            # save obs, bev_obs & act
             obs_cv = cv2.cvtColor(obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
-            cv2.imwrite(os.path.join(save_path, "{}.jpg".format(step)), obs_cv)
+            bev_obs_cv = cv2.cvtColor(bev_obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
+            cv2.imwrite(os.path.join(save_path, "front_rgb_{}.jpg".format(step)), obs_cv)
+            cv2.imwrite(os.path.join(save_path, "bev_rgb_{}.jpg".format(step)), bev_obs_cv)
             with open(os.path.join(save_path, "{}.json".format(step)), "wt") as f:
                 json.dump({"act": act}, f)
                 f.close()
             print("Recorded!")
 
         # next & done reset
-        obs = next_obs
+        obs, bev_obs = next_obs, next_bev_obs
         if done:
             print("done!")
             obs = env.reset()
