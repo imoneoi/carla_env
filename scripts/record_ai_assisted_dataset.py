@@ -26,7 +26,7 @@ def record_dataset(
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
     
     # fix the map
-    global_config = {"world":{"map_list" : ['Town01'], "map_lifetime" : n_steps}}
+    global_config = {"world":{"map_list" : ['Town05'], "map_lifetime" : n_steps}}
 
     # step env
     env = create_wrapped_carla_single_car_env(global_config=global_config, gpu_index=gpu_index)
@@ -43,13 +43,13 @@ def record_dataset(
             env.unwrapped.server_manager.client.apply_batch_sync([
                 carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, False, env.unwrapped.server_manager.tm_port)
             ])
-            next_obs, next_bev_obs, rew, done, info = env.step([act])
+            (next_obs, next_bev_obs), rew, done, info = env.step([act])
             env.unwrapped.server_manager.client.apply_batch_sync([
                 carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, True, env.unwrapped.server_manager.tm_port)
             ])
         else:
             print(2)
-            next_obs, next_bev_obs, rew, done, info = env.step([None])
+            (next_obs, next_bev_obs), rew, done, info = env.step([None])
             print("step!")
             # get act
             car_control = env.unwrapped.car_manager.cars[0].actor.get_control()
