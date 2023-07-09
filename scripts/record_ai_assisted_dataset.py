@@ -35,7 +35,7 @@ def record_dataset(
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
     
     # fix the map
-    global_config = {"server": {"quality": "High"}, "world":{"map_list" : ['Town05'], "map_lifetime" : n_steps}}
+    global_config = {"server": {"quality": "High"}, "world":{"map_list" : ['Town10HD'], "map_lifetime" : n_steps}, "car": {"num_auto_cars": 0, "num_walkers": 0, "car_blueprint_list": "vehicle.toyota.prius"}}
 
     # step env
     env = create_wrapped_carla_single_car_env(global_config=global_config, gpu_index=gpu_index)
@@ -45,30 +45,22 @@ def record_dataset(
     try:
         # Try opening the existing step file
         with open(step_file, "r+") as f:
-            if f.read():
-                digits_only = re.sub(r'\D', '', f.read())
-                if digits_only:
-                    prev_step = int(digits_only)
-                else:
-                    prev_step = 0
-                f.write(str(prev_step))
-                # filtered_digits = [char for char in f.read() if char.isdigit()]
-                # print(filtered_digits)
-                # prev_step = int(''.join(filtered_digits))
-                # prev_step = int(f.read().strip())
+            digits_only = re.sub(r'\D', '', f.read())
+            if digits_only:
+                prev_step = int(digits_only)
             else:
                 prev_step = 0
-                f.write(str(0))
+            f.truncate(prev_step)
     except FileNotFoundError:
         # Create a new step file if it doesn't exist
         with open(step_file, "w") as f:
-            f.write(str(0))
+            f.truncate(0)
             prev_step = 0
             
             
     obs, bev_obs = env.reset()
     print("initial reset!")
-    for step in tqdm(range(1, n_steps)):
+    for step in tqdm(range(1, n_steps + 1)):
         if random.random() < eps:
             # eps-greedy act
             act = env.action_space.sample() * rand_action_range
@@ -85,6 +77,12 @@ def record_dataset(
             # get act
             car_control = env.unwrapped.car_manager.cars[0].actor.get_control()
             act = [car_control.throttle - car_control.brake, car_control.steer]
+            location = env.unwrapped.car_manager.cars[0].actor.get_location()
+            position = {
+                        "x": location.x,
+                        "y": location.y
+                        # "z": location.z
+                    }
 
             # save obs, bev_obs & act
             obs_cv = cv2.cvtColor(obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
@@ -93,9 +91,8 @@ def record_dataset(
             cv2.imwrite(os.path.join(save_path, "bev_rgb_{}.jpg".format(prev_step + step)), bev_obs_cv)
             # do not erase the previously recorded data
             with open(os.path.join(save_path, "{}.json".format(prev_step + step)), "wt") as f:
-                json.dump({"act": act}, f)
+                json.dump({"act": act, "pos": position}, f, indent=4)
                 f.close()
-            # print("Recorded!")
 
         # next & done reset
         obs, bev_obs = next_obs, next_bev_obs
@@ -111,7 +108,7 @@ def record_dataset(
 def main():
     nowTime = datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')
     parser = argparse.ArgumentParser()
-    parser.add_argument("--save_path", default="../dataset/bev_230706", type=str, help="Path to save dataset")
+    parser.add_argument("--save_path", default="bev_23070700", type=str, help="Path to save dataset")
     parser.add_argument("--n", type=int, default=int(2e1), help="Number of steps to collect")
     parser.add_argument("--n_jobs", type=int, default=10, help="Number of worker processes")
     parser.add_argument("--devices", type=str, default="0", help="GPUs to use")
@@ -127,7 +124,7 @@ def main():
 
     processes = []
     for job_id in range(n_jobs):
-        save_path = os.path.join(args.save_path, str(job_id))
+        save_path = os.path.join("../dataset/", args.save_path, str(job_id))
         os.makedirs(save_path, exist_ok=True)
 
         gpu_index = devices[job_id % len(devices)]
