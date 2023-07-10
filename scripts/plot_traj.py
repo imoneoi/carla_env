@@ -4,6 +4,7 @@ import glob
 import argparse
 import json
 import matplotlib.pyplot as plt
+import datetime
 
 def plot_trajectories(data_path):
     x_values = []
@@ -31,8 +32,9 @@ def plot_trajectories(data_path):
     plt.scatter(x_values, y_values, s=1)
     plt.xlabel("X")
     plt.ylabel("Y")
-    plt.title("Position Curve")
+    plt.title("Trajectories")
     plt.show()
+    plt.savefig("../Town10_100k_pos_{}.png".format(datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')))
 
     
 def main():
