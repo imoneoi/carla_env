@@ -77,12 +77,6 @@ def record_dataset(
             # get act
             car_control = env.unwrapped.car_manager.cars[0].actor.get_control()
             act = [car_control.throttle - car_control.brake, car_control.steer]
-            location = env.unwrapped.car_manager.cars[0].actor.get_location()
-            position = {
-                        "x": location.x,
-                        "y": location.y
-                        # "z": location.z
-                    }
 
             # save obs, bev_obs & act
             obs_cv = cv2.cvtColor(obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
@@ -91,7 +85,19 @@ def record_dataset(
             cv2.imwrite(os.path.join(save_path, "bev_rgb_{}.jpg".format(prev_step + step)), bev_obs_cv)
             # do not erase the previously recorded data
             with open(os.path.join(save_path, "{}.json".format(prev_step + step)), "wt") as f:
-                json.dump({"act": act, "pos": position}, f, indent=4)
+                ego_location = env.unwrapped.car_manager.cars[0].actor.get_location()
+                position = {
+                            "x": ego_location.x,
+                            "y": ego_location.y
+                            # "z": ego_location.z
+                        }
+                ego_velocity = env.unwrapped.car_manager.cars[0].actor.get_velocity()
+                velocity = {
+                            "x": ego_velocity.x,
+                            "y": ego_velocity.y
+                            # "z": ego_velocity.z
+                        }
+                json.dump({"act": act, "pos": position, "vel": velocity}, f, indent=4)
                 f.close()
 
         # next & done reset
