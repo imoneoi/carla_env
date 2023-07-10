@@ -50,9 +50,12 @@ def record_dataset(
             "num_walkers": 0, 
             "car_blueprint_list": ["vehicle.toyota.prius"]
             }, 
+        "perception": {
+            "target_size": (1280, 1280)
+        },
         "car": {
-            "camera_x": 640, 
-            "camera_y": 320, 
+            "camera_x": 1280, 
+            "camera_y": 1280, 
             "camera_postprocess": False, 
             "bev_camera_x": 1280, 
             "bev_camera_y": 1280, 
