@@ -35,7 +35,31 @@ def record_dataset(
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
     
     # fix the map
-    global_config = {"server": {"resolution_x": 800, "resolution_y": 800, "quality": "Epic"}, "world":{"map_list" : ['Town10HD'], "map_lifetime" : n_steps}, "car": {"num_auto_cars": 0, "num_walkers": 0, "car_blueprint_list": "vehicle.toyota.prius"}}
+    global_config = {
+        "server": {
+            "resolution_x": 1280, 
+            "resolution_y": 1280, 
+            "quality": "Epic"
+            }, 
+        "world": {
+            "map_list" : ['Town10HD'], 
+            "map_lifetime" : n_steps
+            }, 
+        "car_manager": {
+            "num_auto_cars": 0, 
+            "num_walkers": 0, 
+            "car_blueprint_list": ["vehicle.toyota.prius"]
+            }, 
+        "car": {
+            "camera_x": 640, 
+            "camera_y": 320, 
+            "camera_postprocess": False, 
+            "bev_camera_x": 1280, 
+            "bev_camera_y": 1280, 
+            "bev_fov": 90, 
+            "bev_camera_height": 40.0
+            }
+        }
 
     # step env
     env = create_wrapped_carla_single_car_env(global_config=global_config, gpu_index=gpu_index)

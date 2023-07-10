@@ -41,6 +41,8 @@ while true; do
         step=$(cat "$step_file")
     fi
 
+    # step=$(expr "$step" + 0)
+    # total_n=$(expr "$total_n" + 0)
     # Check if the collection step exceeds the total limit
     if [ "$step" -ge "$total_n" ]; then
         echo "Collection step reached the total limit!"
