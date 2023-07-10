@@ -21,7 +21,7 @@ class WorldManager:
             # TODO: prevent the memory leakage
             "server_lifetime": 10,
 
-            "weather_blacklist": ['Night', 'NightClear', 'NightCloudy', 'NightExtraCloudy', 'NightRainy'],
+            "weather_blacklist": ['ClearNight', 'CloudyNight', 'WetNight', 'WetCloudyNight', 'SoftRainNight', 'MidRainyNight', 'HardRainNight'],
             # "weather_list": [k for k, v in vars(carla.WeatherParameters).items()
             #                 if isinstance(v, carla.WeatherParameters)]
         }
