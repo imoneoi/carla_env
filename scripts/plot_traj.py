@@ -34,7 +34,7 @@ def plot_trajectories(data_path):
     plt.ylabel("Y")
     plt.title("Trajectories")
     plt.show()
-    plt.savefig("../Town10_100k_pos_{}.png".format(datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')))
+    plt.savefig("../figures/Town10_100k_pos_{}.png".format(datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')))
 
     
 def main():
