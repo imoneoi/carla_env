@@ -84,6 +84,7 @@ class WorldManager:
         # change weather
         weather_whitelist = [k for k, v in vars(carla.WeatherParameters).items()
                 if isinstance(v, carla.WeatherParameters) and k not in self.options["weather_blacklist"]]
+        print(weather_whitelist)
         # [item for item in self.options["weather_list"] if item.id not in self.options["car_blueprint_blacklist"]]
         weather_name = np.random.choice(weather_whitelist)
         self.world.set_weather(getattr(carla.WeatherParameters, weather_name))
