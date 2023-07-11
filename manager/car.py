@@ -18,6 +18,7 @@ class CarManager:
             "num_controlled_cars": 1,
             "num_auto_cars": 100,
             "num_walkers": 200,
+            "ignore_traffic_lights_percentage": 100,
 
             "car_blueprint_list": None,
             "car_blueprint_blacklist": ["vehicle.chargercop2020.chargercop2020",
@@ -110,6 +111,7 @@ class CarManager:
             # set tm configuration
             tm.ignore_lights_percentage(car_actor, 100)
             tm.ignore_signs_percentage(car_actor, 100)
+            tm.ignore_traffic_lights_percentage(car_actor, self.options["ignore_traffic_lights_percentage"])
 
             # create car instance
             self.cars.append(Car(self.car_options, self.car_reward_weights, car_actor, world))
