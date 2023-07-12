@@ -109,9 +109,9 @@ class CarManager:
             spawn_point_list.remove(spawn_point)
 
             # set tm configuration
-            tm.ignore_lights_percentage(car_actor, 100)
+            tm.ignore_lights_percentage(car_actor, self.options["ignore_traffic_lights_percentage"])
             tm.ignore_signs_percentage(car_actor, 100)
-            tm.ignore_traffic_lights_percentage(car_actor, self.options["ignore_traffic_lights_percentage"])
+            # tm.ignore_traffic_lights_percentage(car_actor, self.options["ignore_traffic_lights_percentage"])
 
             # create car instance
             self.cars.append(Car(self.car_options, self.car_reward_weights, car_actor, world))
