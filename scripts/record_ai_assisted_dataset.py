@@ -26,6 +26,7 @@ import pdb
 def record_dataset(
         save_path: str,
         n_steps: int,
+        timeout: int,
         gpu_index: int,
 
         eps: float,
@@ -37,9 +38,9 @@ def record_dataset(
     # fix the map
     global_config = {
         "server": {
-            "resolution_x": 1280, 
-            "resolution_y": 1280, 
-            "quality": "Epic"
+            "resolution_x": 640, 
+            "resolution_y": 640, 
+            "quality": "High"
             }, 
         "world": {
             "map_list" : ['Town10HD'], 
@@ -51,14 +52,14 @@ def record_dataset(
             "car_blueprint_list": ["vehicle.toyota.prius"]
             }, 
         "perception": {
-            "target_size": (1280, 1280)
+            "target_size": (640, 640)
         },
         "car": {
-            "camera_x": 1280, 
-            "camera_y": 1280, 
+            "camera_x": 640, 
+            "camera_y": 640, 
             "camera_postprocess": False, 
-            "bev_camera_x": 1280, 
-            "bev_camera_y": 1280, 
+            "bev_camera_x": 640, 
+            "bev_camera_y": 640, 
             "bev_fov": 90, 
             "bev_camera_height": 40.0
             }
@@ -132,7 +133,7 @@ def record_dataset(
         # Save the collection step to a file before potential exiting
         with open(step_file, "w") as f:
             f.write(str(prev_step + step))
-        if done:
+        if done or (step % timeout == 0):
             print("done!")
             obs, bev_obs = env.reset()
             print("reset!")
@@ -144,6 +145,7 @@ def main():
     parser.add_argument("--save_path", default="bev_23070700", type=str, help="Path to save dataset")
     parser.add_argument("--n", type=int, default=int(2e1), help="Number of steps to collect")
     parser.add_argument("--n_jobs", type=int, default=10, help="Number of worker processes")
+    parser.add_argument("--timeout", type=int, default=1000, help="Reset at timeout steps")
     parser.add_argument("--devices", type=str, default="0", help="GPUs to use")
     parser.add_argument("--eps", type=float, default=0.2, help="Probability to randomly perturb AutoPilot actions")
     parser.add_argument("--rand_action_range", type=float, default=0.1, help="Perturbation range")
@@ -165,6 +167,7 @@ def main():
         processes.append(mp.Process(target=record_dataset, kwargs={
             "save_path": save_path,
             "n_steps": step_per_job,
+            "timeout": args.timeout,
             "gpu_index": gpu_index,
             "eps": args.eps,
             "rand_action_range": args.rand_action_range
