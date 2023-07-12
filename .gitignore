@@ -1,6 +1,9 @@
 # IDEA
 .idea/
 
+# history
+.history/
+
 # Static
 static_files/
 
