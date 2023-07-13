@@ -152,7 +152,7 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# recorded data
+# recorded data, figures and videos
 dataset/
-dataset/real_1
-dataset/sim_1
+figures/
+videos/
