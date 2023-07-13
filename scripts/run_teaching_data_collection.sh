@@ -25,7 +25,7 @@ while true; do
     remain_n=$((total_n - prev_step))
 
     # Run your Python script here
-    python record_ai_assisted_dataset.py --save_path $data_path --n $remain_n --n_jobs 1 --timeout 2000 --eps 0.0
+    python record_ai_assisted_dataset.py --save_path $data_path --n $remain_n --n_jobs 1 --timeout 500 --eps 0.0
     
     # Check the exit status of the Python script
     if [ $? -ne 0 ]; then
