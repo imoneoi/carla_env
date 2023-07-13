@@ -27,7 +27,7 @@ class PerceptionManager:
         if "drivable_model" in self.options:
             self.drivable_model = onnxruntime.InferenceSession(self.options["drivable_model"])
 
-    def infer(self, images, bev_images, velocity):
+    def infer(self, images, bev_images, bev_seg_images, velocity):
         if self.drivable_model is not None:
             # original rgb for human readable
             orig_rgb = None
@@ -80,5 +80,15 @@ class PerceptionManager:
             bev_img_resized = np.array([
                 cv2.resize(img, target_size, interpolation=cv2.INTER_LINEAR)
                 for img in bev_images[0]]).transpose((0, 3, 1, 2))
+            bev_seg_img_resized = np.array([
+                cv2.resize(img, target_size, interpolation=cv2.INTER_LINEAR)
+                for img in bev_seg_images[0]]).transpose((0, 3, 1, 2))
+            print(bev_img_resized.shape)
+            print(bev_seg_img_resized.shape)
+            print(bev_img_resized)
+            print(bev_seg_img_resized)
+            # cv2.imwrite(os.path.join("/figures", "resized_seg_bev_rgb.jpg"), cv2.cvtColor(bev_seg_img_resized[0].transpose((1, 2, 0)), cv2.COLOR_RGB2BGR))
+            
+            # cv2.imwrite(os.path.join("/figures", "expand_resized_seg_bev_rgb.jpg"), cv2.cvtColor(np.expand_dims(bev_seg_img_resized, 0).transpose((1, 2, 0)), cv2.COLOR_RGB2BGR))
 
-            return np.expand_dims(img_resized, 0), np.expand_dims(bev_img_resized, 0)
+            return np.expand_dims(img_resized, 0), np.expand_dims(bev_img_resized, 0), np.expand_dims(bev_seg_img_resized, 0)
