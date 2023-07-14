@@ -88,6 +88,6 @@ datetime=$(date +"%Y%m%d%H%M%S")
 output_file="${datetime}.mp4"
 
 # Run FFmpeg command to create the MP4 video
-ffmpeg -framerate 30 -start_number 1 -i "${image_dir}/bev_rgb_%d.jpg" -c:v libx264 -r 30 -pix_fmt yuv420p "${output_file}"
+ffmpeg -framerate 30 -start_number 1 -i "${image_dir}/seg_bev_rgb_%d.jpg" -c:v libx264 -r 30 -pix_fmt yuv420p "${output_file}"
 
 python plot_traj.py --data_path $data_path --n_jobs 1 
