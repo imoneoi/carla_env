@@ -85,7 +85,7 @@ image_dir="../dataset/$data_path/0"
 datetime=$(date +"%Y%m%d%H%M%S")
 
 # Set the output file name using the datetime
-output_file="${datetime}.mp4"
+output_file="../videos/${datetime}.mp4"
 
 # Run FFmpeg command to create the MP4 video
 ffmpeg -framerate 30 -start_number 1 -i "${image_dir}/seg_bev_rgb_%d.jpg" -c:v libx264 -r 30 -pix_fmt yuv420p "${output_file}"
