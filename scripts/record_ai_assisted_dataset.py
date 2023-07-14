@@ -85,9 +85,6 @@ def record_dataset(
             f.truncate(0)
             prev_step = 0
             
-    env.unwrapped.server_manager.client.apply_batch_sync([
-                carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, True, env.unwrapped.server_manager.tm_port)
-            ])
     obs, bev_obs, bev_seg_obs = env.reset()
     print("initial reset!")
     for step in tqdm(range(1, n_steps + 1)):
@@ -130,7 +127,8 @@ def record_dataset(
                             "y": ego_velocity.y
                             # "z": ego_velocity.z
                         }
-                json.dump({"act": act, "pos": position, "vel": velocity}, f, indent=4)
+                terminal = done or (step % timeout == 0)
+                json.dump({"act": act, "pos": position, "vel": velocity, "traj_terminal": terminal}, f, indent=4)
                 f.close()
 
         # next & done reset
@@ -138,7 +136,7 @@ def record_dataset(
         # Save the collection step to a file before potential exiting
         with open(step_file, "w") as f:
             f.write(str(prev_step + step))
-        if done or (step % timeout == 0):
+        if terminal:
             print("done!")
             obs, bev_obs, bev_seg_obs = env.reset()
             print("reset!")
