@@ -292,13 +292,34 @@ class Car:
         # extract rgba(4 channels) image from carla_img
         img = np.frombuffer(carla_img.raw_data, dtype=np.dtype("uint8"))
         img = np.reshape(img, (carla_img.height, carla_img.width, 4))
-        # extract rgb channel
-        img = img[:, :, :3]
-        # bgr to rgb
-        img = img[:, :, ::-1]
-
+        # extract B channel for segment label
+        seg_label = img[:, :, 2]  # Extract B channel for segment label
+        
+        """
+        Convert an image containing CARLA semantic segmentation labels to
+        Cityscapes palette.
+        """
+        classes = {
+            0: [0, 0, 0],         # None
+            1: [70, 70, 70],      # Buildings
+            2: [190, 153, 153],   # Fences
+            3: [72, 0, 90],       # Other
+            4: [220, 20, 60],     # Pedestrians
+            5: [153, 153, 153],   # Poles
+            6: [157, 234, 50],    # RoadLines
+            7: [128, 64, 128],    # Roads
+            8: [244, 35, 232],    # Sidewalks
+            9: [107, 142, 35],    # Vegetation
+            10: [0, 0, 255],      # Vehicles
+            11: [102, 102, 156],  # Walls
+            12: [220, 220, 0]     # TrafficSigns
+        }
+        seg_label_rgb = np.zeros((seg_label.shape[0], seg_label.shape[1], 3))
+        for key, value in classes.items():
+            seg_label_rgb[np.where(seg_label == key)] = value
+            
         # save image
-        self.seg_bev_camera_images[cam_id] = img
+        self.seg_bev_camera_images[cam_id] = seg_label_rgb.astype(np.uint8)
 
         # trigger semaphore
         self.seg_bev_camera_event[cam_id].set()

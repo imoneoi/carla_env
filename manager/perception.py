@@ -83,10 +83,13 @@ class PerceptionManager:
             bev_seg_img_resized = np.array([
                 cv2.resize(img, target_size, interpolation=cv2.INTER_LINEAR)
                 for img in bev_seg_images[0]]).transpose((0, 3, 1, 2))
-            print(bev_img_resized.shape)
-            print(bev_seg_img_resized.shape)
-            print(bev_img_resized)
-            print(bev_seg_img_resized)
+            # print(bev_seg_images)
+            # print(bev_seg_images.shape)
+            # bev_seg_img_resized = np.array(bev_seg_images).transpose((0, 3, 1, 2))
+            # print(bev_img_resized.shape)
+            # print(bev_seg_img_resized.shape)
+            # print(bev_img_resized)
+            # print(bev_seg_img_resized)
             # cv2.imwrite(os.path.join("/figures", "resized_seg_bev_rgb.jpg"), cv2.cvtColor(bev_seg_img_resized[0].transpose((1, 2, 0)), cv2.COLOR_RGB2BGR))
             
             # cv2.imwrite(os.path.join("/figures", "expand_resized_seg_bev_rgb.jpg"), cv2.cvtColor(np.expand_dims(bev_seg_img_resized, 0).transpose((1, 2, 0)), cv2.COLOR_RGB2BGR))
