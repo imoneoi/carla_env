@@ -67,7 +67,7 @@ cover/
 *.mo
 *.pot
 *.png
-scripts/*.txt
+scripts/step.txt
 scripts/*.mp4
 
 # Django stuff:
