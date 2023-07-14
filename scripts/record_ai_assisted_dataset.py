@@ -85,7 +85,9 @@ def record_dataset(
             f.truncate(0)
             prev_step = 0
             
-            
+    env.unwrapped.server_manager.client.apply_batch_sync([
+                carla.command.SetAutopilot(env.unwrapped.car_manager.cars[0].actor.id, True, env.unwrapped.server_manager.tm_port)
+            ])
     obs, bev_obs, bev_seg_obs = env.reset()
     print("initial reset!")
     for step in tqdm(range(1, n_steps + 1)):
@@ -107,12 +109,13 @@ def record_dataset(
             act = [car_control.throttle - car_control.brake, car_control.steer]
 
             # save obs, bev_obs & act
-            obs_cv = cv2.cvtColor(obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
+            # obs_cv = cv2.cvtColor(obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
             bev_obs_cv = cv2.cvtColor(bev_obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
             bev_seg_obs_cv = cv2.cvtColor(bev_seg_obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
             # cv2.imwrite(os.path.join(save_path, "front_rgb_{}.jpg".format(prev_step + step)), obs_cv)
             cv2.imwrite(os.path.join(save_path, "bev_rgb_{}.jpg".format(prev_step + step)), bev_obs_cv)
             cv2.imwrite(os.path.join(save_path, "seg_bev_rgb_{}.jpg".format(prev_step + step)), bev_seg_obs_cv)
+            
             # do not erase the previously recorded data
             with open(os.path.join(save_path, "{}.json".format(prev_step + step)), "wt") as f:
                 ego_location = env.unwrapped.car_manager.cars[0].actor.get_location()
