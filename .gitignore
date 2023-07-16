@@ -68,6 +68,7 @@ cover/
 *.pot
 *.png
 scripts/results
+scripts/wandb
 scripts/step.txt
 scripts/*.mp4
 
