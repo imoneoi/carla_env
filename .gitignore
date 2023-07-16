@@ -67,6 +67,7 @@ cover/
 *.mo
 *.pot
 *.png
+scripts/results
 scripts/step.txt
 scripts/*.mp4
 
