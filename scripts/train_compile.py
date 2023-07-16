@@ -7,14 +7,17 @@ python train_compile.py --rollouts_path_train expert-rollouts/drawing_train_1686
 import os
 import numpy as np
 import random
+import wandb
 import torch
 from torch.utils.data import Dataset, DataLoader
 
 import compile_utils
 import skill_extraction
 # TODO: dataset and args
-from dataset import TrajectoryDatasetWithRew, pad_collate
+from data_parser import TrajectoryDatasetwithPosition, pad_collate
 from arguments import args, device
+
+wandb.init(project="AI_assisted_driving")
 
 
 #set random seeds
@@ -25,8 +28,8 @@ torch.cuda.manual_seed_all(args.random_seed)
 
 model = skill_extraction.CompILE(args).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
-dl_train = DataLoader(TrajectoryDatasetWithRew(args.rollouts_path_train, args), collate_fn=pad_collate, batch_size=args.batch_size)
-dl_eval = DataLoader(TrajectoryDatasetWithRew(args.rollouts_path_eval, args), collate_fn=pad_collate, batch_size=args.batch_size)
+dl_train = DataLoader(TrajectoryDatasetwithPosition(args.rollouts_path_train, args), collate_fn=pad_collate, batch_size=args.batch_size)
+dl_eval = DataLoader(TrajectoryDatasetwithPosition(args.rollouts_path_eval, args, train=False), collate_fn=pad_collate, batch_size=args.batch_size)
 
 
 # Train model.
