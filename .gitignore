@@ -71,6 +71,7 @@ scripts/results
 scripts/wandb
 scripts/step.txt
 scripts/*.mp4
+scripts/*.out
 
 # Django stuff:
 *.log
