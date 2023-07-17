@@ -68,6 +68,7 @@ parser.add_argument("--beta_z", type=float, default=0.1, help="Weight on KL term
 parser.add_argument("--beta_s", type=float, default=0, help="Weight on state reconstruction")
 parser.add_argument("--mode", type=str, default="action", help="What to embed/reconstruct -> action or state+action or statediff+action")
 parser.add_argument("--action_type", type=str, default="continuous", help="Action type -> discrete or continuous")
+parser.add_argument('--wandb', type=bool, default=True)
 parser.add_argument("--wb", action="store_true", help="Record to wandb")
 parser.add_argument("--random_seed", type=int, default=0, help="Random seed")
 
