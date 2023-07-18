@@ -101,7 +101,7 @@ for step in trange(args.iterations):
             "eval_nll": eval_nll}
         )
     if step % args.save_interval == 0:
-        torch.save(model.state_dict(), os.path.join(args.save_dir, "model.pth"))
+        torch.save(model.state_dict(), os.path.join(args.save_dir, "model_{}.pth".format(step)))
 
     if(best_valid_loss_same >  50):
         break
