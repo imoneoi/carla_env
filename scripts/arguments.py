@@ -38,6 +38,7 @@
 import argparse
 import torch
 import time
+import datetime
 import json
 import os
 import shutil
@@ -81,7 +82,8 @@ if args.run_name is None:
 args.action_type = "continuous" if args.cont_action_dim > 0 else "discrete"
 
 # Create a directory for saving results
-dir = "results/" + args.run_name
+nowTime = datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')
+dir = "results/" + "CompILE_{}_iteration={}_latent_dim={}_maxSegNum={}_beta_b={}_beta_z={}_beta_s={}_{}".format(args.run_name, args.iterations, args.latent_dim, args.num_segments, args.beta_b, args.beta_z, args.beta_s, nowTime)
 if os.path.exists(dir):
     shutil.rmtree(dir)
 os.makedirs(dir)
