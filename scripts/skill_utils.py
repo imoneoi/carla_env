@@ -2,6 +2,7 @@ import viz_utils
 import torch
 from collections import defaultdict
 import numpy as np
+import ipdb
 NUM_TYPE_SKILLS = 3
 MAX_T = {'parking':25}
 
@@ -63,8 +64,9 @@ def apply_parking_filter(states, actions, rews, seeds, lengths):
     new_lengths = []
     for episode in range(len(states)):
         all_states = states[episode][:lengths[episode]]
-        if(not filter_state_conditions(all_states[0])):
-                continue
+        # TODO
+        # if (not filter_state_conditions(all_states[0])):
+        #     continue
         new_states.append(states[episode].numpy())
         new_actions.append(actions[episode].numpy())
         new_rews.append(rews[episode].numpy())
@@ -118,6 +120,7 @@ def get_sample_rollouts(args_dict):
         for skill_idx in range(NUM_TYPE_SKILLS):
             chosen_skill = args_dict["chosen_skills"][skill_idx]
             for idx in args_dict["idx_for_fixed_skills"][chosen_skill]:
+                # ipdb.set_trace()
                 logs["states"][skill_idx].append(latent_skills_dict["states"][chosen_skill][idx])
                 logs["actions"][skill_idx].append(latent_skills_dict["actions"][chosen_skill][idx])
                 logs["rews"][skill_idx].append(latent_skills_dict["rews"][chosen_skill][idx])

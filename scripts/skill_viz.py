@@ -38,7 +38,7 @@ from arguments import args
 
 
 MIN_SKILL_LENGTH = 2
-ROLLOUTS_DIR = "expert-rollouts/parking_eval_1683450947.pkl"
+ROLLOUTS_DIR = "../dataset/bev_071317_T10/0"
 
 #set random seeds
 torch.manual_seed(args.random_seed)
@@ -47,20 +47,20 @@ np.random.seed(args.random_seed)
 torch.cuda.manual_seed_all(args.random_seed) 
 
 
-def plot_parking_spots():
-    for spot in range(15):
-            x = (spot - 15 // 2) * (4.0) - 2.0
-            plt.vlines(x=x-2, ymin=10, ymax=18)
-            plt.vlines(x=x+2, ymin=10, ymax=18)
-            plt.vlines(x=x-2, ymin=-10, ymax=-18)
-            plt.vlines(x=x+2, ymin=-10, ymax=-18)
+# def plot_parking_spots():
+#     for spot in range(15):
+#         x = (spot - 15 // 2) * (4.0) - 2.0
+#         plt.vlines(x=x-2, ymin=10, ymax=18)
+#         plt.vlines(x=x+2, ymin=10, ymax=18)
+#         plt.vlines(x=x-2, ymin=-10, ymax=-18)
+#         plt.vlines(x=x+2, ymin=-10, ymax=-18)
 
 
 def plot_traj(args_dict, states, lengths, fn_timestamp):
     for episode in range(states.shape[0]):
         plt.plot([100*state[0] for state in states[episode][:lengths[episode]]], [100*state[1] for state in states[episode][:lengths[episode]]], color="blue", alpha=0.75)
-    plot_parking_spots()
-    plt.savefig("fig/"+args_dict["env_name"]+"/trajectories_"+fn_timestamp, dpi=300)
+    # plot_parking_spots()
+    plt.savefig("../figures/"+args_dict["env_name"]+"/trajectories_"+fn_timestamp, dpi=300)
     plt.close()
 
 #filter by max peak reward as heuristic
@@ -74,8 +74,8 @@ def plot_rollouts(args_dict):
     for skill in logs["states"]:
         for demo_episode in logs["states"][skill]:
             plt.plot([state[0]*100 for state in demo_episode], [state[1]*100 for state in demo_episode], color="blue", alpha=0.5)
-            plt.scatter([state[-6]*100 for state in demo_episode], [state[-5]*100 for state in demo_episode], color="green", label="goal", alpha=0.5, s=150)
-    plot_parking_spots()
+            # plt.scatter([state[-6]*100 for state in demo_episode], [state[-5]*100 for state in demo_episode], color="green", label="goal", alpha=0.5, s=150)
+    # plot_parking_spots()
     plt.xlabel("x")
     plt.ylabel("y")
     plt.show()
@@ -93,9 +93,9 @@ def plot_skills(args_dict):
                 plt.plot([100*state[0] for state in traj[x1:x2+1]], [100*state[1] for state in traj[x1:x2+1]], color="mediumvioletred", alpha=0.75)
         plt.xlabel("x")
         plt.ylabel("y")
-        plot_parking_spots()
+        # plot_parking_spots()
         plt.title("Latent: "+str(skill)+", Num Episodes: "+str(len(latent_skills_dict["states"][skill])))
-        plt.savefig("fig/"+args_dict["env_name"]+"/latent_"+str(skill)+"_"+str(args_dict["compile_dir"].split("/")[-1])+"_"+fn_timestamp, dpi=300)
+        plt.savefig("../figures/"+args_dict["env_name"]+"/latent_"+str(skill)+"_"+str(args_dict["compile_dir"].split("/")[-1])+"_"+fn_timestamp+".png", dpi=300)
         plt.close()
     return
 
@@ -111,7 +111,7 @@ def viz_logs(args_dict, logs_fn, skill_type="compile"):
             traj = logs["states"][skill][demo]
             plt.plot([100*state[0] for state in traj[x1:x2+1]], [100*state[1] for state in traj[x1:x2+1]], color="olive", alpha=0.75)
         plt.title("Demos for Skill "+str(skill)+" "+skill_type)
-        plot_parking_spots()
+        # plot_parking_spots()
         plt.xlabel("x")
         plt.ylabel("y")
         plt.show()
@@ -125,10 +125,11 @@ args_dict = {"min_skill_length":MIN_SKILL_LENGTH,
     "same_traj":False,
     "sample":True,
     "chosen_skills":[1,8,15], #Make sure latents are always the same :)
-    "idx_for_fixed_skills":{1:[0, 1], 8:[0, 1], 15:[0, 1]},
-    "compile_dir":"results/parking-concrete-16d-sdiff1",
+    "idx_for_fixed_skills":{1:[0], 8:[0], 15:[0]},
+    "compile_dir":"results/CompILE_{args.run_name}_iteration={args.iterations}_latent_dim={args.latent_dim}_maxSegNum={args.num_segments}_beta_b={args.beta_b}_beta_z={args.beta_z}_beta_s={args.beta_s}_{nowTime}",
     "min_skill_length":MIN_SKILL_LENGTH}
-logs_fn = plot_rollouts(args_dict)
+# logs_fn = plot_rollouts(args_dict)
+logs_fn = plot_skills(args_dict)
 skill_utils.get_eval_seeds(args_dict)
 viz_logs(args_dict, logs_fn, skill_type="compile")
 viz_logs(args_dict, logs_fn, skill_type="time")
