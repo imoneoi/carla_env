@@ -126,13 +126,13 @@ args_dict = {"min_skill_length":MIN_SKILL_LENGTH,
     "sample":True,
     "chosen_skills":[1,8,15], #Make sure latents are always the same :)
     "idx_for_fixed_skills":{1:[0], 8:[0], 15:[0]},
-    "compile_dir":"results/CompILE_{args.run_name}_iteration={args.iterations}_latent_dim={args.latent_dim}_maxSegNum={args.num_segments}_beta_b={args.beta_b}_beta_z={args.beta_z}_beta_s={args.beta_s}_{nowTime}",
+    "compile_dir":"results/CompILE_statediff_iteration=2000_latent_dim=3_maxSegNum=8_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-07-17-17-23-59",
     "min_skill_length":MIN_SKILL_LENGTH}
 # logs_fn = plot_rollouts(args_dict)
 logs_fn = plot_skills(args_dict)
 skill_utils.get_eval_seeds(args_dict)
-viz_logs(args_dict, logs_fn, skill_type="compile")
-viz_logs(args_dict, logs_fn, skill_type="time")
+# viz_logs(args_dict, logs_fn, skill_type="compile")
+# viz_logs(args_dict, logs_fn, skill_type="time")
 
 
 

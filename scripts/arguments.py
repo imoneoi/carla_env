@@ -51,7 +51,7 @@ parser.add_argument("--hidden_dim", type=int, default=64, help="Number of hidden
 parser.add_argument("--latent_dim", type=int, default=32, help="Dimensionality of latent variables.")
 parser.add_argument("--latent_dist", type=str, default="gaussian", help="Latent variable type -> 'gaussian' or 'concrete'")
 parser.add_argument("--batch_size", type=int, default=100, help="Mini-batch size (for averaging gradients)")
-parser.add_argument("--train_eval_ratio", type=float, default=0.8, help="Training set out of the whole dataset")
+parser.add_argument("--train_eval_ratio", type=float, default=1.0, help="Training set out of the whole dataset")
 parser.add_argument("--state_dim", type=int, default=12, help="Dimensionality of state")
 parser.add_argument("--num_actions", type=int, default=5, help="Number of distinct actions in data generation")
 parser.add_argument("--cont_action_dim", type=int, default=2, help="Dimensionality of the continuous action space (or 0 if discrete)")

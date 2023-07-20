@@ -33,12 +33,12 @@ def load_model_and_batch(viz_args_dict, batch_num=1000):
         args.action_type = 'continuous'
     if viz_args_dict["compile_dir"]:
         model = skill_extraction.CompILE(args).to(args.device)
-        # chooose your model
-        model.load_state_dict(torch.load(args.save_dir + "/model_0.pth", map_location=torch.device('cpu')))
+        # TODO: chooose your model
+        model.load_state_dict(torch.load(args.save_dir + "/model_900.pth", map_location=torch.device('cpu')))
     else:
         model = None
     args.rollouts_path = viz_args_dict["rollouts_dir"]
-    dl = DataLoader(TrajectoryDatasetwithPosition(args.rollouts_path, args, train=False), collate_fn=pad_collate, batch_size=batch_num)
+    dl = DataLoader(TrajectoryDatasetwithPosition(args.rollouts_path, args, train=True), collate_fn=pad_collate, batch_size=batch_num)
     batch = next(iter(dl))
     return model, batch, args
 
