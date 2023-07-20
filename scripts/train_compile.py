@@ -22,7 +22,7 @@ from arguments import args, device
 wandb.init(project="AI_assisted_driving", save_code=False)
 wandb.config.update(args)
 nowTime = datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')
-wandb.run.name = f"CompILE_{args.run_name}_iteration={args.iterations}_latent_dim={args.latent_dim}_maxSegNum={args.num_segments}_beta_b={args.beta_b}_expectedSegLength={args.prior_rate}_beta_z={args.beta_z}_beta_s={args.beta_s}_{nowTime}"
+wandb.run.name = f"CompILE_{args.run_name}_iteration={args.iterations}_latent_dim={args.latent_dim}_maxSegNum={args.num_segments}_expectedSegLength={args.prior_rate}_beta_b={args.beta_b}_beta_z={args.beta_z}_beta_s={args.beta_s}_{nowTime}"
 
 #set random seeds
 torch.manual_seed(args.random_seed)
