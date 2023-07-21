@@ -43,13 +43,13 @@ def record_dataset(
             "quality": "Low"
             }, 
         "world": {
-            "map_list" : ['Town10HD'], 
+            "map_list" : ['Town02'], 
             "map_lifetime" : n_steps
             }, 
         "car_manager": {
             "num_auto_cars": 0, 
             "num_walkers": 0, 
-            "car_blueprint_list": ["vehicle.toyota.prius"]
+            "car_blueprint_list": ["vehicle.tesla.model3"]
             }, 
         "perception": {
             "target_size": (640, 640)
@@ -127,8 +127,9 @@ def record_dataset(
                             "y": ego_velocity.y
                             # "z": ego_velocity.z
                         }
+                ego_heading = env.unwrapped.car_manager.cars[0].actor.get_transform().rotation.yaw
                 terminal = done or (step % timeout == 0)
-                json.dump({"act": act, "pos": position, "vel": velocity, "traj_terminal": terminal}, f, indent=4)
+                json.dump({"act": act, "pos": position, "yaw": ego_heading, "vel": velocity, "traj_terminal": terminal}, f, indent=4)
                 f.close()
 
         # next & done reset
