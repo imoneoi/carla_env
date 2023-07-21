@@ -35,6 +35,7 @@ import random
 import skill_utils
 import pickle
 from arguments import args
+import ipdb
 
 
 MIN_SKILL_LENGTH = 2
@@ -83,21 +84,39 @@ def plot_rollouts(args_dict):
 
 
 def plot_skills(args_dict):
-    fn_timestamp = str(int(time())) 
+    fn_timestamp = str(int(time()))
     latent_skills_dict, states, lengths = skill_utils.get_all_skills(args_dict)
     plot_traj(args_dict, states, lengths, fn_timestamp)
+
     for skill in latent_skills_dict["states"].keys():
         for idx in range(len(latent_skills_dict["states"][skill])):
-                traj = latent_skills_dict["states"][skill][idx]
-                x1, x2 = latent_skills_dict["compile"][skill][idx]
-                plt.plot([100*state[0] for state in traj[x1:x2+1]], [100*state[1] for state in traj[x1:x2+1]], color="mediumvioletred", alpha=0.75)
+            traj = latent_skills_dict["states"][skill][idx]
+            x1, x2 = latent_skills_dict["compile"][skill][idx]
+            # ipdb.set_trace()
+
+            # Extract the x and y coordinates of the starting and terminal points
+            start_point = traj[x1]
+            terminal_point = traj[x2-1]
+
+            # Extract the x and y coordinates of the middle points inside the segment
+            middle_points_x = np.array([state[0] for state in traj[x1:x2]])
+            middle_points_y = np.array([state[1] for state in traj[x1:x2]])
+
+            # Plot the starting and terminal points with distinct colors
+            plt.plot(100 * start_point[0], 100 * start_point[1], marker='o', markersize=10, color='mediumvioletred')
+            plt.plot(100 * terminal_point[0], 100 * terminal_point[1], marker='o', markersize=10, color='blue')
+
+            # Plot the middle points inside the segment
+            plt.plot(100 * middle_points_x, 100 * middle_points_y, color="gray", alpha=0.75)
+
         plt.xlabel("x")
         plt.ylabel("y")
-        # plot_parking_spots()
-        plt.title("Latent: "+str(skill)+", Num Episodes: "+str(len(latent_skills_dict["states"][skill])))
-        plt.savefig("../figures/"+args_dict["env_name"]+"/latent_"+str(skill)+"_"+str(args_dict["compile_dir"].split("/")[-1])+"_"+fn_timestamp+".png", dpi=300)
+        plt.title("Latent: " + str(skill) + ", Num Episodes: " + str(len(latent_skills_dict["states"][skill])))
+        plt.savefig("../figures/" + args_dict["env_name"] + "/latent_" + str(skill) + "_" + str(args_dict["compile_dir"].split("/")[-1]) + "_" + fn_timestamp + ".png", dpi=300)
         plt.close()
+
     return
+
 
 def viz_logs(args_dict, logs_fn, skill_type="compile"):
     logs = pickle.load(open(logs_fn, "rb"))
@@ -126,7 +145,7 @@ args_dict = {"min_skill_length":MIN_SKILL_LENGTH,
     "sample":True,
     "chosen_skills":[1,8,15], #Make sure latents are always the same :)
     "idx_for_fixed_skills":{1:[0], 8:[0], 15:[0]},
-    "compile_dir":"results/CompILE_statediff_iteration=2000_latent_dim=3_maxSegNum=8_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-07-17-17-23-59",
+    "compile_dir":"results/CompILE_statediff_iteration=3000_latent_dim=4_maxSegNum=8_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-07-19-18-28-51",
     "min_skill_length":MIN_SKILL_LENGTH}
 # logs_fn = plot_rollouts(args_dict)
 logs_fn = plot_skills(args_dict)

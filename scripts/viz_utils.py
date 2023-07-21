@@ -34,7 +34,7 @@ def load_model_and_batch(viz_args_dict, batch_num=1000):
     if viz_args_dict["compile_dir"]:
         model = skill_extraction.CompILE(args).to(args.device)
         # TODO: chooose your model
-        model.load_state_dict(torch.load(args.save_dir + "/model_900.pth", map_location=torch.device('cpu')))
+        model.load_state_dict(torch.load(args.save_dir + "/model_500.pth", map_location=torch.device('cpu')))
     else:
         model = None
     args.rollouts_path = viz_args_dict["rollouts_dir"]
