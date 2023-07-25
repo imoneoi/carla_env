@@ -122,3 +122,22 @@ def vector(location_1, location_2):
         norm = np.linalg.norm([x, y, z])
 
         return [x/norm, y/norm, z/norm]
+    
+def positive(num):
+    """
+    Return the given number if positive, else 0
+
+        :param num: value to check
+    """
+    return num if num > 0.0 else 0.0
+
+def get_speed(vehicle):
+    """
+    Compute speed of a vehicle in Km/h.
+
+        :param vehicle: the vehicle for which speed is calculated
+        :return: speed as a float in Km/h
+    """
+    vel = vehicle.get_velocity()
+
+    return 3.6 * math.sqrt(vel.x ** 2 + vel.y ** 2 + vel.z ** 2)
