@@ -111,6 +111,9 @@ class CarManager:
             # set tm configuration
             tm.ignore_lights_percentage(car_actor, self.options["ignore_traffic_lights_percentage"])
             tm.ignore_signs_percentage(car_actor, 100)
+            # tm.global_distance_to_leading_vehicle(car_actor, 5)
+            tm.global_percentage_speed_difference(car_actor, 80)
+            tm.auto_lane_change(car_actor, False)
             # tm.ignore_traffic_lights_percentage(car_actor, self.options["ignore_traffic_lights_percentage"])
 
             # create car instance
@@ -130,6 +133,7 @@ class CarManager:
             batch_op.append(
                 carla.command.SpawnActor(car_blueprint, spawn_point)
                     .then(carla.command.SetAutopilot(carla.command.FutureActor, True, tm_port)))
+
 
         result = client.apply_batch_sync(batch_op, True)
 
