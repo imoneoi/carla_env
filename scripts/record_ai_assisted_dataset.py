@@ -49,7 +49,7 @@ def record_dataset(
         "car_manager": {
             "num_auto_cars": 0, 
             "num_walkers": 0, 
-            "car_blueprint_list": ["vehicle.tesla.model3"]
+            "car_blueprint_list": ["vehicle.audi.tt"]# ["vehicle.tesla.model3"]
             }, 
         "perception": {
             "target_size": (640, 640)
@@ -107,10 +107,10 @@ def record_dataset(
 
             # save obs, bev_obs & act
             # obs_cv = cv2.cvtColor(obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
-            bev_obs_cv = cv2.cvtColor(bev_obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
+            # bev_obs_cv = cv2.cvtColor(bev_obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
             bev_seg_obs_cv = cv2.cvtColor(bev_seg_obs.transpose((1, 2, 0)), cv2.COLOR_RGB2BGR)
             # cv2.imwrite(os.path.join(save_path, "front_rgb_{}.jpg".format(prev_step + step)), obs_cv)
-            cv2.imwrite(os.path.join(save_path, "bev_rgb_{}.jpg".format(prev_step + step)), bev_obs_cv)
+            # cv2.imwrite(os.path.join(save_path, "bev_rgb_{}.jpg".format(prev_step + step)), bev_obs_cv)
             cv2.imwrite(os.path.join(save_path, "seg_bev_rgb_{}.jpg".format(prev_step + step)), bev_seg_obs_cv)
             
             # do not erase the previously recorded data
