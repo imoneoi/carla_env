@@ -86,8 +86,8 @@ class CarManager:
 
         for _ in range(self.options["num_controlled_cars"]):
             car_blueprint = np.random.choice(car_blueprint_list)
-            # mark ego vehicle for hybrid physics mode
-            car_blueprint.set_attribute("role_name", "hero")
+            # TODO: mark ego vehicle for hybrid physics mode
+            car_blueprint.set_attribute("role_name", "autopilot")
 
             # try to find a spawn point
             car_actor = None
@@ -111,8 +111,8 @@ class CarManager:
             # set tm configuration
             tm.ignore_lights_percentage(car_actor, self.options["ignore_traffic_lights_percentage"])
             tm.ignore_signs_percentage(car_actor, 100)
-            # tm.global_distance_to_leading_vehicle(car_actor, 5)
-            tm.global_percentage_speed_difference(car_actor, 80)
+            # tm.global_distance_to_leading_vehicle(5)
+            tm.global_percentage_speed_difference(80.0)
             tm.auto_lane_change(car_actor, False)
             # tm.ignore_traffic_lights_percentage(car_actor, self.options["ignore_traffic_lights_percentage"])
 
