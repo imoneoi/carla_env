@@ -1,16 +1,23 @@
-"""Adapted from https://github.com/zhejz/carla-roach/ CC-BY-NC 4.0 license."""
-import carla
-from enum import Enum
-import numpy as np
+# Copyright (c) # Copyright (c) 2018-2020 CVC.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 
-from .controller import PIDController
-# import carla_gym.utils.transforms as trans_utils
+""" This module contains a local planner to perform low-level waypoint following based on PID controllers. """
+
+from enum import Enum
+from collections import deque
+import random
+
+import carla
+from .controller import VehiclePIDController
+from .misc import draw_waypoints, get_speed
 
 
 class RoadOption(Enum):
     """
-    RoadOption represents the possible topological configurations
-    when moving from a segment of lane to other.
+    RoadOption represents the possible topological configurations when moving from a segment of lane to other.
+
     """
     VOID = -1
     LEFT = 1
@@ -22,158 +29,309 @@ class RoadOption(Enum):
 
 
 class LocalPlanner(object):
+    """
+    LocalPlanner implements the basic behavior of following a
+    trajectory of waypoints that is generated on-the-fly.
 
-    def __init__(self, target_speed=0.0,
-                 longitudinal_pid_params=[0.5, 0.025, 0.1],
-                 lateral_pid_params=[0.75, 0.05, 0.0],
-                 threshold_before=7.5,
-                 threshold_after=5.0):
+    The low-level motion of the vehicle is computed by using two PID controllers,
+    one is used for the lateral control and the other for the longitudinal control (cruise speed).
 
-        self._target_speed = target_speed
-        self._speed_pid = PIDController(longitudinal_pid_params)
-        self._turn_pid = PIDController(lateral_pid_params)
-        self._threshold_before = threshold_before
-        self._threshold_after = threshold_after
-        self._max_skip = 20
+    When multiple paths are available (intersections) this local planner makes a random choice,
+    unless a given global plan has already been specified.
+    """
 
-        self._last_command = 4
+    def __init__(self, vehicle, opt_dict={}):
+        """
+        :param vehicle: actor to apply to local planner logic onto
+        :param opt_dict: dictionary of arguments with different parameters:
+            dt: time between simulation steps
+            target_speed: desired cruise speed in Km/h
+            sampling_radius: distance between the waypoints part of the plan
+            lateral_control_dict: values of the lateral PID controller
+            longitudinal_control_dict: values of the longitudinal PID controller
+            max_throttle: maximum throttle applied to the vehicle
+            max_brake: maximum brake applied to the vehicle
+            max_steering: maximum steering applied to the vehicle
+            offset: distance between the route waypoints and the center of the lane
+        """
+        self._vehicle = vehicle
+        self._world = self._vehicle.get_world()
+        self._map = self._world.get_map()
 
-    def run_step(self, route_plan, actor_transform, actor_speed):
-        target_index = -1
-        for i, (waypoint, road_option) in enumerate(route_plan[0:self._max_skip]):
-            if self._last_command == 4 and road_option.value != 4:
-                threshold = self._threshold_before
+        self._vehicle_controller = None
+        self.target_waypoint = None
+        self.target_road_option = None
+
+        self._waypoints_queue = deque(maxlen=10000)
+        self._min_waypoint_queue_length = 100
+        self._stop_waypoint_creation = False
+
+        # Base parameters
+        self._dt = 1.0 / 20.0
+        self._target_speed = 20.0  # Km/h
+        self._sampling_radius = 2.0
+        self._args_lateral_dict = {'K_P': 1.95, 'K_I': 0.05, 'K_D': 0.2, 'dt': self._dt}
+        self._args_longitudinal_dict = {'K_P': 1.0, 'K_I': 0.05, 'K_D': 0, 'dt': self._dt}
+        self._max_throt = 0.75
+        self._max_brake = 0.3
+        self._max_steer = 0.8
+        self._offset = 0
+        self._base_min_distance = 3.0
+        self._follow_speed_limits = False
+
+        # Overload parameters
+        if opt_dict:
+            if 'dt' in opt_dict:
+                self._dt = opt_dict['dt']
+            if 'target_speed' in opt_dict:
+                self._target_speed = opt_dict['target_speed']
+            if 'sampling_radius' in opt_dict:
+                self._sampling_radius = opt_dict['sampling_radius']
+            if 'lateral_control_dict' in opt_dict:
+                self._args_lateral_dict = opt_dict['lateral_control_dict']
+            if 'longitudinal_control_dict' in opt_dict:
+                self._args_longitudinal_dict = opt_dict['longitudinal_control_dict']
+            if 'max_throttle' in opt_dict:
+                self._max_throt = opt_dict['max_throttle']
+            if 'max_brake' in opt_dict:
+                self._max_brake = opt_dict['max_brake']
+            if 'max_steering' in opt_dict:
+                self._max_steer = opt_dict['max_steering']
+            if 'offset' in opt_dict:
+                self._offset = opt_dict['offset']
+            if 'base_min_distance' in opt_dict:
+                self._base_min_distance = opt_dict['base_min_distance']
+            if 'follow_speed_limits' in opt_dict:
+                self._follow_speed_limits = opt_dict['follow_speed_limits']
+
+        # initializing controller
+        self._init_controller()
+
+    def reset_vehicle(self):
+        """Reset the ego-vehicle"""
+        self._vehicle = None
+
+    def _init_controller(self):
+        """Controller initialization"""
+        self._vehicle_controller = VehiclePIDController(self._vehicle,
+                                                        args_lateral=self._args_lateral_dict,
+                                                        args_longitudinal=self._args_longitudinal_dict,
+                                                        offset=self._offset,
+                                                        max_throttle=self._max_throt,
+                                                        max_brake=self._max_brake,
+                                                        max_steering=self._max_steer)
+
+        # Compute the current vehicle waypoint
+        current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+        self.target_waypoint, self.target_road_option = (current_waypoint, RoadOption.LANEFOLLOW)
+        self._waypoints_queue.append((self.target_waypoint, self.target_road_option))
+
+    def set_speed(self, speed):
+        """
+        Changes the target speed
+
+        :param speed: new target speed in Km/h
+        :return:
+        """
+        if self._follow_speed_limits:
+            print("WARNING: The max speed is currently set to follow the speed limits. "
+                  "Use 'follow_speed_limits' to deactivate this")
+        self._target_speed = speed
+
+    def follow_speed_limits(self, value=True):
+        """
+        Activates a flag that makes the max speed dynamically vary according to the spped limits
+
+        :param value: bool
+        :return:
+        """
+        self._follow_speed_limits = value
+
+    def _compute_next_waypoints(self, k=1):
+        """
+        Add new waypoints to the trajectory queue.
+
+        :param k: how many waypoints to compute
+        :return:
+        """
+        # check we do not overflow the queue
+        available_entries = self._waypoints_queue.maxlen - len(self._waypoints_queue)
+        k = min(available_entries, k)
+
+        for _ in range(k):
+            last_waypoint = self._waypoints_queue[-1][0]
+            next_waypoints = list(last_waypoint.next(self._sampling_radius))
+
+            if len(next_waypoints) == 0:
+                break
+            elif len(next_waypoints) == 1:
+                # only one option available ==> lanefollowing
+                next_waypoint = next_waypoints[0]
+                road_option = RoadOption.LANEFOLLOW
             else:
-                threshold = self._threshold_after
+                # random choice between the possible options
+                road_options_list = _retrieve_options(
+                    next_waypoints, last_waypoint)
+                road_option = random.choice(road_options_list)
+                next_waypoint = next_waypoints[road_options_list.index(
+                    road_option)]
 
-            distance = waypoint.transform.location.distance(actor_transform.location)
-            if distance < threshold:
-                self._last_command = road_option.value
-                target_index = i
+            self._waypoints_queue.append((next_waypoint, road_option))
 
-        if target_index < len(route_plan)-1:
-            target_index += 1
-        target_command = route_plan[target_index][1]
-        target_location_world_coord = route_plan[target_index][0].transform.location
-        target_location_actor_coord = loc_global_to_ref(target_location_world_coord, actor_transform)
+    def set_global_plan(self, current_plan, stop_waypoint_creation=True, clean_queue=True):
+        """
+        Adds a new plan to the local planner. A plan must be a list of [carla.Waypoint, RoadOption] pairs
+        The 'clean_queue` parameter erases the previous plan if True, otherwise, it adds it to the old one
+        The 'stop_waypoint_creation' flag stops the automatic creation of random waypoints
 
-        # steer
-        x = target_location_actor_coord.x
-        y = target_location_actor_coord.y
-        theta = np.arctan2(y, x)
-        steer = self._turn_pid.step(theta)
+        :param current_plan: list of (carla.Waypoint, RoadOption)
+        :param stop_waypoint_creation: bool
+        :param clean_queue: bool
+        :return:
+        """
+        if clean_queue:
+            self._waypoints_queue.clear()
 
-        # throttle
-        target_speed = self._target_speed
-        if target_command not in [3, 4]:
-            target_speed *= 0.75
-        delta = target_speed - actor_speed
-        throttle = self._speed_pid.step(delta)
+        # Remake the waypoints queue if the new plan has a higher length than the queue
+        new_plan_length = len(current_plan) + len(self._waypoints_queue)
+        if new_plan_length > self._waypoints_queue.maxlen:
+            new_waypoint_queue = deque(maxlen=new_plan_length)
+            for wp in self._waypoints_queue:
+                new_waypoint_queue.append(wp)
+            self._waypoints_queue = new_waypoint_queue
 
-        # brake
-        brake = 0.0
+        for elem in current_plan:
+            self._waypoints_queue.append(elem)
 
-        # clip
-        steer = np.clip(steer, -1.0, 1.0)
-        throttle = np.clip(throttle, 0.0, 1.0)
+        self._stop_waypoint_creation = stop_waypoint_creation
 
-        return throttle, steer, brake
-    
-def loc_global_to_ref(target_loc_in_global, ref_trans_in_global):
+    def run_step(self, debug=False):
+        """
+        Execute one step of local planning which involves running the longitudinal and lateral PID controllers to
+        follow the waypoints trajectory.
+
+        :param debug: boolean flag to activate waypoints debugging
+        :return: control to be applied
+        """
+        if self._follow_speed_limits:
+            self._target_speed = self._vehicle.get_speed_limit()
+
+        # Add more waypoints too few in the horizon
+        if not self._stop_waypoint_creation and len(self._waypoints_queue) < self._min_waypoint_queue_length:
+            self._compute_next_waypoints(k=self._min_waypoint_queue_length)
+
+        # Purge the queue of obsolete waypoints
+        veh_location = self._vehicle.get_location()
+        vehicle_speed = get_speed(self._vehicle) / 3.6
+        self._min_distance = self._base_min_distance + 0.5 *vehicle_speed
+
+        num_waypoint_removed = 0
+        for waypoint, _ in self._waypoints_queue:
+
+            if len(self._waypoints_queue) - num_waypoint_removed == 1:
+                min_distance = 1  # Don't remove the last waypoint until very close by
+            else:
+                min_distance = self._min_distance
+
+            if veh_location.distance(waypoint.transform.location) < min_distance:
+                num_waypoint_removed += 1
+            else:
+                break
+
+        if num_waypoint_removed > 0:
+            for _ in range(num_waypoint_removed):
+                self._waypoints_queue.popleft()
+
+        # Get the target waypoint and move using the PID controllers. Stop if no target waypoint
+        if len(self._waypoints_queue) == 0:
+            control = carla.VehicleControl()
+            control.steer = 0.0
+            control.throttle = 0.0
+            control.brake = 1.0
+            control.hand_brake = False
+            control.manual_gear_shift = False
+        else:
+            self.target_waypoint, self.target_road_option = self._waypoints_queue[0]
+            control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint)
+
+        if debug:
+            draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], 1.0)
+
+        return control
+
+    def get_incoming_waypoint_and_direction(self, steps=3):
+        """
+        Returns direction and waypoint at a distance ahead defined by the user.
+
+            :param steps: number of steps to get the incoming waypoint.
+        """
+        if len(self._waypoints_queue) > steps:
+            return self._waypoints_queue[steps]
+
+        else:
+            try:
+                wpt, direction = self._waypoints_queue[-1]
+                return wpt, direction
+            except IndexError as i:
+                return None, RoadOption.VOID
+
+    def get_plan(self):
+        """Returns the current plan of the local planner"""
+        return self._waypoints_queue
+
+    def done(self):
+        """
+        Returns whether or not the planner has finished
+
+        :return: boolean
+        """
+        return len(self._waypoints_queue) == 0
+
+
+def _retrieve_options(list_waypoints, current_waypoint):
     """
-    :param target_loc_in_global: carla.Location in global coordinate (world, actor)
-    :param ref_trans_in_global: carla.Transform in global coordinate (world, actor)
-    :return: carla.Location in ref coordinate
+    Compute the type of connection between the current active waypoint and the multiple waypoints present in
+    list_waypoints. The result is encoded as a list of RoadOption enums.
+
+    :param list_waypoints: list with the possible target waypoints in case of multiple options
+    :param current_waypoint: current active waypoint
+    :return: list of RoadOption enums representing the type of connection from the active waypoint to each
+             candidate in list_waypoints
     """
-    x = target_loc_in_global.x - ref_trans_in_global.location.x
-    y = target_loc_in_global.y - ref_trans_in_global.location.y
-    z = target_loc_in_global.z - ref_trans_in_global.location.z
-    vec_in_global = carla.Vector3D(x=x, y=y, z=z)
-    vec_in_ref = vec_global_to_ref(vec_in_global, ref_trans_in_global.rotation)
+    options = []
+    for next_waypoint in list_waypoints:
+        # this is needed because something we are linking to
+        # the beggining of an intersection, therefore the
+        # variation in angle is small
+        next_next_waypoint = next_waypoint.next(3.0)[0]
+        link = _compute_connection(current_waypoint, next_next_waypoint)
+        options.append(link)
 
-    target_loc_in_ref = carla.Location(x=vec_in_ref.x, y=vec_in_ref.y, z=vec_in_ref.z)
-    return target_loc_in_ref
+    return options
 
 
-def vec_global_to_ref(target_vec_in_global, ref_rot_in_global):
+def _compute_connection(current_waypoint, next_waypoint, threshold=35):
     """
-    :param target_vec_in_global: carla.Vector3D in global coordinate (world, actor)
-    :param ref_rot_in_global: carla.Rotation in global coordinate (world, actor)
-    :return: carla.Vector3D in ref coordinate
+    Compute the type of topological connection between an active waypoint (current_waypoint) and a target waypoint
+    (next_waypoint).
+
+    :param current_waypoint: active waypoint
+    :param next_waypoint: target waypoint
+    :return: the type of topological connection encoded as a RoadOption enum:
+             RoadOption.STRAIGHT
+             RoadOption.LEFT
+             RoadOption.RIGHT
     """
-    R = carla_rot_to_mat(ref_rot_in_global)
-    np_vec_in_global = np.array([[target_vec_in_global.x],
-                                 [target_vec_in_global.y],
-                                 [target_vec_in_global.z]])
-    np_vec_in_ref = R.T.dot(np_vec_in_global)
-    target_vec_in_ref = carla.Vector3D(x=np_vec_in_ref[0, 0], y=np_vec_in_ref[1, 0], z=np_vec_in_ref[2, 0])
-    return target_vec_in_ref
+    n = next_waypoint.transform.rotation.yaw
+    n = n % 360.0
 
+    c = current_waypoint.transform.rotation.yaw
+    c = c % 360.0
 
-def rot_global_to_ref(target_rot_in_global, ref_rot_in_global):
-    target_roll_in_ref = cast_angle(target_rot_in_global.roll - ref_rot_in_global.roll)
-    target_pitch_in_ref = cast_angle(target_rot_in_global.pitch - ref_rot_in_global.pitch)
-    target_yaw_in_ref = cast_angle(target_rot_in_global.yaw - ref_rot_in_global.yaw)
-
-    target_rot_in_ref = carla.Rotation(roll=target_roll_in_ref, pitch=target_pitch_in_ref, yaw=target_yaw_in_ref)
-    return target_rot_in_ref
-
-def rot_ref_to_global(target_rot_in_ref, ref_rot_in_global):
-    target_roll_in_global = cast_angle(target_rot_in_ref.roll + ref_rot_in_global.roll)
-    target_pitch_in_global = cast_angle(target_rot_in_ref.pitch + ref_rot_in_global.pitch)
-    target_yaw_in_global = cast_angle(target_rot_in_ref.yaw + ref_rot_in_global.yaw)
-
-    target_rot_in_global = carla.Rotation(roll=target_roll_in_global, pitch=target_pitch_in_global, yaw=target_yaw_in_global)
-    return target_rot_in_global
-
-
-def carla_rot_to_mat(carla_rotation):
-    """
-    Transform rpy in carla.Rotation to rotation matrix in np.array
-
-    :param carla_rotation: carla.Rotation 
-    :return: np.array rotation matrix
-    """
-    roll = np.deg2rad(carla_rotation.roll)
-    pitch = np.deg2rad(carla_rotation.pitch)
-    yaw = np.deg2rad(carla_rotation.yaw)
-
-    yaw_matrix = np.array([
-        [np.cos(yaw), -np.sin(yaw), 0],
-        [np.sin(yaw), np.cos(yaw), 0],
-        [0, 0, 1]
-    ])
-    pitch_matrix = np.array([
-        [np.cos(pitch), 0, -np.sin(pitch)],
-        [0, 1, 0],
-        [np.sin(pitch), 0, np.cos(pitch)]
-    ])
-    roll_matrix = np.array([
-        [1, 0, 0],
-        [0, np.cos(roll), np.sin(roll)],
-        [0, -np.sin(roll), np.cos(roll)]
-    ])
-
-    rotation_matrix = yaw_matrix.dot(pitch_matrix).dot(roll_matrix)
-    return rotation_matrix
-
-def get_loc_rot_vel_in_ev(actor_list, ev_transform):
-    location, rotation, absolute_velocity = [], [], []
-    for actor in actor_list:
-        # location
-        location_in_world = actor.get_transform().location
-        location_in_ev = loc_global_to_ref(location_in_world, ev_transform)
-        location.append([location_in_ev.x, location_in_ev.y, location_in_ev.z])
-        # rotation
-        rotation_in_world = actor.get_transform().rotation
-        rotation_in_ev = rot_global_to_ref(rotation_in_world, ev_transform.rotation)
-        rotation.append([rotation_in_ev.roll, rotation_in_ev.pitch, rotation_in_ev.yaw])
-        # velocity
-        vel_in_world = actor.get_velocity()
-        vel_in_ev = vec_global_to_ref(vel_in_world, ev_transform.rotation)
-        absolute_velocity.append([vel_in_ev.x, vel_in_ev.y, vel_in_ev.z])
-    return location, rotation, absolute_velocity
-
-def cast_angle(x):
-    # cast angle to [-180, +180)
-    return (x+180.0)%360.0-180.0
+    diff_angle = (n - c) % 180.0
+    if diff_angle < threshold or diff_angle > (180 - threshold):
+        return RoadOption.STRAIGHT
+    elif diff_angle > 90.0:
+        return RoadOption.LEFT
+    else:
+        return RoadOption.RIGHT

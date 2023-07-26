@@ -15,8 +15,7 @@ from .basic_agent import BasicAgent
 from .utils.local_planner import RoadOption
 from .utils.behavior_types import Cautious, Aggressive, Normal
 
-from .utils.misc import get_speed, positive
-# from .utils.misc import is_within_distance_ahead, compute_yaw_difference
+from .utils.misc import get_speed, positive, is_within_distance, compute_distance
 
 class BehaviorAgent(BasicAgent):
     """
