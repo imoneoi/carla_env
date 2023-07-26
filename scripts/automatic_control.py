@@ -36,24 +36,24 @@ except ImportError:
     raise RuntimeError(
         'cannot import numpy, make sure numpy package is installed')
 
-# ==============================================================================
-# -- Find CARLA module ---------------------------------------------------------
-# ==============================================================================
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+# # ==============================================================================
+# # -- Find CARLA module ---------------------------------------------------------
+# # ==============================================================================
+# try:
+#     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+#         sys.version_info.major,
+#         sys.version_info.minor,
+#         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+# except IndexError:
+#     pass
 
-# ==============================================================================
-# -- Add PythonAPI for release mode --------------------------------------------
-# ==============================================================================
-try:
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/carla')
-except IndexError:
-    pass
+# # ==============================================================================
+# # -- Add PythonAPI for release mode --------------------------------------------
+# # ==============================================================================
+# try:
+#     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/carla')
+# except IndexError:
+#     pass
 
 import carla
 from carla import ColorConverter as cc
@@ -61,7 +61,6 @@ from carla import ColorConverter as cc
 sys.path.append("..")
 from agents.behavior_agent import BehaviorAgent  # pylint: disable=import-error
 from agents.basic_agent import BasicAgent  # pylint: disable=import-error
-
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -695,12 +694,13 @@ def game_loop(args):
         client.set_timeout(4.0)
 
         traffic_manager = client.get_trafficmanager()
-        sim_world = client.load_world('Town02') #get_world()     
+        sim_world = client.load_world('Town10HD') #get_world()     
 
         if args.sync:
             settings = sim_world.get_settings()
             settings.synchronous_mode = True
-            settings.fixed_delta_seconds = 0.05
+            # TODO
+            settings.fixed_delta_seconds = 0.1
             sim_world.apply_settings(settings)
 
             traffic_manager.set_synchronous_mode(True)
