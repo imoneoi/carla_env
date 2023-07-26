@@ -56,23 +56,33 @@ while true; do
     #     echo "Kill the remaining GUI!"
     # fi
 
-    ## Get the list of CARLA GUI processes
-    processes=$(pgrep -x "CarlaUE4")
-
-    # Check the number of CARLA GUI processes
-    process_count=$(echo "$processes" | wc -w)
-
-    if [[ $process_count -gt 1 ]]; then
-        # Get the newest CARLA GUI process PID
-        newest_pid=$(echo "$processes" | tail -n 1)
-
-        # Kill all other CARLA GUI processes except the newest one
-        pkill -f "CarlaUE4" -P $newest_pid
-
-        echo "Killed all CARLA GUI processes except the newest one (PID: $newest_pid)"
+    # Check if CarlaUE4 process is running
+    if pgrep -x "...x/CarlaUE4-Linux-Shipping" > /dev/null; then
+        # If CARLA processes are running, terminate them
+        echo "Killing CarlaUE4 process..."
+        pkill -f "CarlaUE4-Linux-Shipping"
     else
-        echo "Only one CARLA GUI process found. No action needed."
+        # Process is not running
+        echo "CarlaUE4 process is not running."
     fi
+
+    # # Get the list of CARLA GUI processes
+    # processes=$(pgrep -x "CarlaUE4")
+
+    # # Check the number of CARLA GUI processes
+    # process_count=$(echo "$processes" | wc -w)
+
+    # if [[ $process_count -gt 1 ]]; then
+    #     # Get the newest CARLA GUI process PID
+    #     newest_pid=$(echo "$processes" | tail -n 1)
+
+    #     # Kill all other CARLA GUI processes except the newest one
+    #     pkill -f "CarlaUE4" -P $newest_pid
+
+    #     echo "Killed all CARLA GUI processes except the newest one (PID: $newest_pid)"
+    # else
+    #     echo "Only one CARLA GUI process found. No action needed."
+    # fi
 
     # Add a delay between iterations if needed
     sleep 0.5
