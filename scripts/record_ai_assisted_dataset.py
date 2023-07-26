@@ -43,6 +43,7 @@ def record_dataset(
             "quality": "Low"
             }, 
         "world": {
+            "dt": 0.05,
             "map_list" : ['Town02'], 
             "map_lifetime" : n_steps
             }, 
