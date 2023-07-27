@@ -1,6 +1,8 @@
-from scripts.util.joystick import Joystick
+import sys
+from util.joystick import Joystick
+from wrapped_carla_env import BiasedAction
+sys.path.append("..")
 from carla_env import CarlaEnv
-from scripts.wrapped_carla_env import BiasedAction
 
 import time
 import carla
@@ -59,8 +61,8 @@ class ManualInterface:
         # get joysticks
         act = []
         for js in self.joysticks:
-            accel = -js.axes["ry"]  # Left lever, L <--> R
-            steer = js.axes["x"]   # Right lever, U <--> D
+            accel = -js.axes.get("ry", 0.0)  # Left lever, L <--> R
+            steer = js.axes.get("x", 0.0)   # Right lever, U <--> D
             reverse = js.buttons["tl"]    # LB
 
             # act.append(carla.VehicleControl(
