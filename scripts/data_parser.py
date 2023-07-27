@@ -1,4 +1,5 @@
 import pickle
+import h5py
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
 import torch
@@ -20,6 +21,79 @@ import json
 import torch
 from torch.utils.data import Dataset
 import random
+
+
+class CILTrajectoryDatasetwithVectorState(Dataset):
+    def __init__(self, traj_dir, args, train=True):
+        self.args = args
+        self.traj_dir = traj_dir
+        self.trajectories = []
+
+        # Load JSON files as data samples
+        h5_files = [filename for filename in os.listdir(traj_dir)]
+        
+        for filename in h5_files:
+            file_path = os.path.join(traj_dir, filename)
+            f = h5py.File(file_path, 'r')
+            measurement_data = list(f[u'targets'])
+            ct = 0
+            trajectory = []
+            
+            position = (float(measurement_data[0][8]),float(measurement_data[0][9]))
+            last_position = position
+            for data_point in measurement_data:        
+                if ct >= 5 and ct < len(measurement_data) - 1:
+                    last_position = position
+                    position = (data_point[8],data_point[9])
+                    dist = np.linalg.norm(np.array(position)-np.array(last_position))
+                    if dist > 147 and len(trajectory) > 1:
+                        self.trajectories.append(trajectory)
+                        trajectory = []
+                    else:
+                        trajectory.append(data_point)     
+                ct += 1
+                
+            last_position = (float(measurement_data[-3][8]),float(measurement_data[-3][9]))
+            position = (float(measurement_data[-2][8]),float(measurement_data[-2][9]))
+            dist = np.linalg.norm(np.array(position)-np.array(last_position))
+            if dist<107 and len(trajectory)>5:
+                self.trajectories.append(trajectory)
+                trajectory = []
+                
+
+        # Randomly select a subset of trajectories
+        if train:
+            num_selected_trajectories = int(len(self.trajectories) * self.args.train_eval_ratio)
+        else:
+            num_selected_trajectories = int(len(self.trajectories) * (1 - self.args.train_eval_ratio))
+        selected_indices = random.sample(range(len(self.trajectories)), num_selected_trajectories)
+        self.trajectories = [self.trajectories[idx] for idx in selected_indices]
+
+    def __len__(self):
+        return len(self.trajectories)
+
+    def __getitem__(self, idx):
+        trajectory = self.trajectories[idx]
+
+        # Process the trajectory data here
+        obs_list, actions_list = [], []
+        for data_point in trajectory:
+            obs_list.append(torch.Tensor(data_point[8: 11]).to(self.args.device))
+            actions_list.append(torch.Tensor([data_point[0], data_point[1] + data_point[2]]).to(self.args.device))
+
+        obs = torch.stack(obs_list, dim=0)
+        actions = torch.stack(actions_list, dim=0)
+        rews = torch.zeros((len(actions_list), 1)).to(self.args.device)  # Set all rewards to 0
+        seed = torch.Tensor([self.args.random_seed]).to(self.args.device)
+        # obs = obs[:-1]  # End goal
+
+        if self.args.action_type == "discrete":
+            out = [obs, (actions + 1).type(torch.int64), rews, seed]  # So that we can use padding 0
+        else:
+            out = [obs, actions, rews, seed]
+
+        return out
+
 
 class TrajectoryDatasetwithPosition(Dataset):
     def __init__(self, traj_dir, args, train=True):
