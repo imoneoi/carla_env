@@ -4,6 +4,9 @@
 # history
 .history/
 
+# carla planner map
+carla
+
 # Static
 static_files/
 
