@@ -16,7 +16,7 @@ from torch.utils.data import Dataset, DataLoader
 import compile_utils
 import skill_extraction
 # TODO: dataset and args
-from data_parser import TrajectoryDatasetwithPosition, pad_collate
+from data_parser import TrajectoryDatasetwithPosition, CILTrajectoryDatasetwithVectorState, pad_collate
 from arguments import args, device
 
 wandb.init(project="AI_assisted_driving", save_code=False)
@@ -32,8 +32,8 @@ torch.cuda.manual_seed_all(args.random_seed)
 
 model = skill_extraction.CompILE(args).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
-dl_train = DataLoader(TrajectoryDatasetwithPosition(args.rollouts_path_train, args), collate_fn=pad_collate, batch_size=args.batch_size)
-dl_eval = DataLoader(TrajectoryDatasetwithPosition(args.rollouts_path_eval, args, train=False), collate_fn=pad_collate, batch_size=args.batch_size)
+dl_train = DataLoader(CILTrajectoryDatasetwithVectorState(args.rollouts_path_train, args), collate_fn=pad_collate, batch_size=args.batch_size)
+dl_eval = DataLoader(CILTrajectoryDatasetwithVectorState(args.rollouts_path_eval, args, train=False), collate_fn=pad_collate, batch_size=args.batch_size)
 
 
 # Train model.
