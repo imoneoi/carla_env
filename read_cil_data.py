@@ -11,6 +11,8 @@ from matplotlib.cbook import get_sample_data
 
 from carla.planner.map import CarlaMap
 
+import pdb
+
 filenames = sys.argv[1:]
 
 steerings = []
@@ -122,13 +124,17 @@ for filename in filenames:
     
     position = town_map.convert_to_pixel( [float(measurement_data[0][8]),float(measurement_data[0][9]),0.0])
     last_position = position
+    pdb.set_trace()
     
     for data_point in measurement_data:        
 
         if ct >= 5 and ct < len(measurement_data) - 1:
             last_position = position
+            # true_last_position = (data_point[8],data_point[9])
             position = town_map.convert_to_pixel( [data_point[8],data_point[9],0.0])
             dist = np.linalg.norm(np.array(position)-np.array(last_position))
+            # true_dist = np.linalg.norm(np.array((data_point[8], data_point[9])))
+            # pdb.set_trace()
             if dist > 890 and len(pose_x) > 1:
                 print('respawn')
                 ax.scatter(pose_x[0],pose_y[0],c='r',s=5)
@@ -166,5 +172,6 @@ ax.imshow(map_img, extent=[x_min, x_max, y_min, y_max])
 
 plt.axis('off')
 plt.tight_layout()
-plt.savefig('figures/cil_vis_trajs.png')
+nowTime = datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')
+plt.savefig('figures/cil_vis_trajs_{}.png'.format(nowTime))
 plt.show()
