@@ -1,5 +1,6 @@
 import h5py
 import sys, os
+import datetime
 from PIL import Image
 import numpy as np     # numpy
 import matplotlib.pyplot as plt
@@ -30,9 +31,12 @@ commands = []
 fig, ax = plt.subplots(1,1)
 
 town_map = CarlaMap("Town01", 0.1653, 50.0)
+# map_img = mpimg.imread('figures/Town01.png')
+
+# ax.imshow(map_img)
 map_img = mpimg.imread('figures/Town01.png')
 
-ax.imshow(map_img)
+
 map_shape = town_map.map_image.shape
 dims = np.shape(map_img)
 
@@ -125,7 +129,7 @@ for filename in filenames:
             last_position = position
             position = town_map.convert_to_pixel( [data_point[8],data_point[9],0.0])
             dist = np.linalg.norm(np.array(position)-np.array(last_position))
-            if dist > 890 and len(pose_x) > 3:
+            if dist > 890 and len(pose_x) > 1:
                 print('respawn')
                 ax.scatter(pose_x[0],pose_y[0],c='r',s=5)
                 ax.plot(pose_x, pose_y)
@@ -150,7 +154,17 @@ for filename in filenames:
         pose_x=[]
         pose_y=[]
 
+# # Get the size of the map_img
+height, width, _ = map_img.shape
+
+# Get the x-axis and y-axis limits of the existing plot
+x_min, x_max = ax.get_xlim()
+y_min, y_max = ax.get_ylim()
+
+# Set the extent of the map to match the scatter points range
+ax.imshow(map_img, extent=[x_min, x_max, y_min, y_max])
+
 plt.axis('off')
 plt.tight_layout()
-plt.savefig('../../niuhy/github/carla_env/figures/cil_vis_trajs.png')
+plt.savefig('figures/cil_vis_trajs.png')
 plt.show()
