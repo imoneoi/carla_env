@@ -83,7 +83,7 @@ args.action_type = "continuous" if args.cont_action_dim > 0 else "discrete"
 
 # Create a directory for saving results
 nowTime = datetime.datetime.now().strftime('%y-%m-%d-%H-%M-%S')
-dir = "results/" + "CompILE_{}_iteration={}_latent_dim={}_maxSegNum={}_beta_b={}_beta_z={}_beta_s={}_{}".format(args.run_name, args.iterations, args.latent_dim, args.num_segments, args.beta_b, args.beta_z, args.beta_s, nowTime)
+dir = "results/" + "CompILE_{}_iteration={}_latent_dim={}_maxSegNum={}_expectedSegLength={}_beta_b={}_beta_z={}_beta_s={}_{}".format(args.run_name, args.iterations, args.latent_dim, args.num_segments, args.prior_rate, args.beta_b, args.beta_z, args.beta_s, nowTime)
 if os.path.exists(dir):
     shutil.rmtree(dir)
 os.makedirs(dir)
