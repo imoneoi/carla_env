@@ -39,7 +39,8 @@ import ipdb
 
 
 MIN_SKILL_LENGTH = 2
-ROLLOUTS_DIR = "../dataset/bev_071317_T10/0"
+# TODO: change rollout dataset directory
+ROLLOUTS_DIR = "../../../CORL2017ImitationLearningData/AgentHuman/SeqVal"
 
 #set random seeds
 torch.manual_seed(args.random_seed)
@@ -101,17 +102,27 @@ def plot_skills(args_dict):
             # Extract the x and y coordinates of the middle points inside the segment
             middle_points_x = np.array([state[0] for state in traj[x1:x2]])
             middle_points_y = np.array([state[1] for state in traj[x1:x2]])
+            # Get the speed values of each middle point
+            middle_points_v = np.array([state[2] for state in traj[x1:x2]])
+
+            # Set the colormap function
+            cmap = plt.cm.viridis
+
+            # Plot the middle points, setting colors based on the speed values
+            plt.scatter(100 * middle_points_x, 100 * middle_points_y, c=middle_points_v, cmap=cmap, alpha=0.75)
 
             # Plot the starting and terminal points with distinct colors
-            plt.plot(100 * start_point[0], 100 * start_point[1], marker='o', markersize=10, color='mediumvioletred')
-            plt.plot(100 * terminal_point[0], 100 * terminal_point[1], marker='o', markersize=10, color='blue')
+            plt.plot(100 * start_point[0], 100 * start_point[1], marker='o', markersize=2, color='mediumvioletred')
+            plt.plot(100 * terminal_point[0], 100 * terminal_point[1], marker='o', markersize=2, color='blue')
 
-            # Plot the middle points inside the segment
-            plt.plot(100 * middle_points_x, 100 * middle_points_y, color="gray", alpha=0.75)
+            # # Plot the middle points inside the segment
+            # plt.plot(100 * middle_points_x, 100 * middle_points_y, color="gray", alpha=0.75)
 
         plt.xlabel("x")
         plt.ylabel("y")
         plt.title("Latent: " + str(skill) + ", Num Episodes: " + str(len(latent_skills_dict["states"][skill])))
+        # Add a color bar to the plot to represent the speed range
+        plt.colorbar(label='Speed')
         plt.savefig("../figures/" + args_dict["env_name"] + "/latent_" + str(skill) + "_" + str(args_dict["compile_dir"].split("/")[-1]) + "_" + fn_timestamp + ".png", dpi=300)
         plt.close()
 
@@ -145,7 +156,8 @@ args_dict = {"min_skill_length":MIN_SKILL_LENGTH,
     "sample":True,
     "chosen_skills":[1,8,15], #Make sure latents are always the same :)
     "idx_for_fixed_skills":{1:[0], 8:[0], 15:[0]},
-    "compile_dir":"results/CompILE_statediff_iteration=3000_latent_dim=4_maxSegNum=8_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-07-19-18-28-51",
+    # TODO: change saved model directory
+    "compile_dir":"results/CompILE_fixedCIL_statediff_beta_s=1_iteration=3000_latent_dim=4_maxSegNum=4_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-07-27-14-14-24",
     "min_skill_length":MIN_SKILL_LENGTH}
 # logs_fn = plot_rollouts(args_dict)
 logs_fn = plot_skills(args_dict)
