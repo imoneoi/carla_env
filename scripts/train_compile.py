@@ -46,7 +46,6 @@ for step in trange(args.iterations):
     train_loss = 0
     batch_num = 0
     dl_iter_train = iter(dl_train)
-    ipdb.set_trace()
     for batch in dl_iter_train:
         states, actions, rewards, lengths, seeds = batch
 
