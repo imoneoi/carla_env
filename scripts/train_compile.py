@@ -18,6 +18,7 @@ import skill_extraction
 # TODO: dataset and args
 from data_parser import TrajectoryDatasetwithPosition, CILTrajectoryDatasetwithVectorState, pad_collate
 from arguments import args, device
+import ipdb
 
 wandb.init(project="AI_assisted_driving", save_code=False)
 wandb.config.update(args)
@@ -45,6 +46,7 @@ for step in trange(args.iterations):
     train_loss = 0
     batch_num = 0
     dl_iter_train = iter(dl_train)
+    ipdb.set_trace()
     for batch in dl_iter_train:
         states, actions, rewards, lengths, seeds = batch
 
