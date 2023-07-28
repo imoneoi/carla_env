@@ -124,7 +124,7 @@ for filename in filenames:
     
     position = town_map.convert_to_pixel( [float(measurement_data[0][8]),float(measurement_data[0][9]),0.0])
     last_position = position
-    pdb.set_trace()
+    # pdb.set_trace()
     
     for data_point in measurement_data:        
 
