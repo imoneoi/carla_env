@@ -79,7 +79,7 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
         obs_list, actions_list = [], []
         for data_point in trajectory:
             # obs_list.append(torch.Tensor(data_point[8: 11]).to(self.args.device))
-            obs_list.append(torch.Tensor([data_point[10], data_point[21:24]]).to(self.args.device))
+            obs_list.append(torch.Tensor([data_point[10], data_point[21], data_point[22], data_point[23]]).to(self.args.device))
             actions_list.append(torch.Tensor([data_point[0], data_point[1] - data_point[2]]).to(self.args.device))
 
         obs = torch.stack(obs_list, dim=0)
