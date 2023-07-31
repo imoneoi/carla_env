@@ -109,7 +109,7 @@ def plot_skills(args_dict):
             cmap = plt.cm.viridis
 
             # Plot the middle points, setting colors based on the speed values
-            plt.scatter(100 * middle_points_x, 100 * middle_points_y, c=middle_points_v, cmap=cmap, alpha=0.75)
+            plt.scatter(100 * middle_points_x, 100 * middle_points_y, c=middle_points_v, cmap=cmap, alpha=0.75, s=1)
 
             # Plot the starting and terminal points with distinct colors
             plt.plot(100 * start_point[0], 100 * start_point[1], marker='o', markersize=2, color='mediumvioletred')
@@ -157,7 +157,7 @@ args_dict = {"min_skill_length":MIN_SKILL_LENGTH,
     "chosen_skills":[1,8,15], #Make sure latents are always the same :)
     "idx_for_fixed_skills":{1:[0], 8:[0], 15:[0]},
     # TODO: change saved model directory
-    "compile_dir":"results/CompILE_fixedCIL_statediff_beta_s=1_iteration=3000_latent_dim=4_maxSegNum=4_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-07-27-14-14-24",
+    "compile_dir":"results/CompILE_CIL_statediff_beta_s=1_iteration=2000_latent_dim=16_maxSegNum=4_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-07-27-20-45-10",
     "min_skill_length":MIN_SKILL_LENGTH}
 # logs_fn = plot_rollouts(args_dict)
 logs_fn = plot_skills(args_dict)
