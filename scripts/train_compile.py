@@ -33,8 +33,8 @@ torch.cuda.manual_seed_all(args.random_seed)
 
 model = skill_extraction.CompILE(args).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
-dl_train = DataLoader(CILTrajectoryDatasetwithVectorState(args.rollouts_path_train, args), collate_fn=pad_collate, batch_size=args.batch_size)
-dl_eval = DataLoader(CILTrajectoryDatasetwithVectorState(args.rollouts_path_eval, args, train=False), collate_fn=pad_collate, batch_size=args.batch_size)
+dl_train = DataLoader(CILTrajectoryDatasetwithVectorState(args.rollouts_path_train, args, state_norm=args.state_norm), collate_fn=pad_collate, batch_size=args.batch_size)
+dl_eval = DataLoader(CILTrajectoryDatasetwithVectorState(args.rollouts_path_eval, args, train=False, state_norm=args.state_norm), collate_fn=pad_collate, batch_size=args.batch_size)
 
 
 # Train model.

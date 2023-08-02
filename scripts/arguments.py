@@ -67,6 +67,7 @@ parser.add_argument("--save_dir", type=str, default=None, help="Path to save (co
 parser.add_argument("--beta_b", type=float, default=0.1, help="Weight on KL term for boundaries")
 parser.add_argument("--beta_z", type=float, default=0.1, help="Weight on KL term for latents")
 parser.add_argument("--beta_s", type=float, default=0, help="Weight on state reconstruction")
+parser.add_argument("--state_norm", type=bool, default=False, help="state normalization")
 parser.add_argument("--mode", type=str, default="action", help="What to embed/reconstruct -> action or state+action or statediff+action")
 parser.add_argument("--action_type", type=str, default="continuous", help="Action type -> discrete or continuous")
 parser.add_argument('--wandb', type=bool, default=True)
