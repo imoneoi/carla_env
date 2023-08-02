@@ -32,8 +32,8 @@ class CompILE(nn.Module):
         self.latent_dim = args.latent_dim
         self.max_num_segments = args.num_segments
         self.latent_dist = args.latent_dist
-        self.temp_b = temp_b
-        self.temp_z = temp_z
+        self.temp_b = args.temp_b
+        self.temp_z = args.temp_z
 
     
         if self.args.action_type == "continuous":
