@@ -24,10 +24,11 @@ import random
 
 
 class CILTrajectoryDatasetwithVectorState(Dataset):
-    def __init__(self, traj_dir, args, train=True):
+    def __init__(self, traj_dir, args, train=True, state_norm=False):
         self.args = args
         self.traj_dir = traj_dir
         self.trajectories = []
+        self.state_norm = state_norm  # Add the state_norm argument to control normalization
 
         # Load JSON files as data samples
         h5_files = [filename for filename in os.listdir(traj_dir)]
@@ -94,9 +95,22 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
             out = [obs, (actions + 1).type(torch.int64), rews, seed]  # So that we can use padding 0
         else:
             out = [obs, actions, rews, seed]
+            
+        if self.state_norm:
+            out[0] = self.state_normalize(out[0])  # Call state_normalize only for observations
 
         return out
 
+    # [-1, 1]
+    def state_normalize(self, obs):
+        # Calculate min and max values for each feature in the observation space
+        min_val = torch.min(obs, dim=0).values
+        max_val = torch.max(obs, dim=0).values
+
+        # Normalize the observation space to the range [-1, 1]
+        obs = 2 * (obs - min_val) / (max_val - min_val) - 1
+
+        return obs
 
 class TrajectoryDatasetwithPosition(Dataset):
     def __init__(self, traj_dir, args, train=True):
