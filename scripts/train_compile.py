@@ -3,7 +3,7 @@ Example calls:
 python train_compile.py  --iterations=5 --rollouts_path_train=../dataset/bev_071317_T10/0 --rollouts_path_eval=../dataset/bev_071317_T10/0 --latent_dist concrete --latent_dim 4 --num_segments 4 --cont_action_dim 2 --prior_rate 10 --mode state+action --run_name driving --state_dim 4 --beta_s 1
 python train_compile.py --rollouts_path_train expert-rollouts/drawing_train_1686529312.pkl --rollouts_path_eval expert-rollouts/drawing_eval_1686529312.pkl  --latent_dist concrete --latent_dim 16 --num_segments 8 --iterations 1 --mode action --run_name drawing-concrete-16d-action0 --batch_size 50 --learning_rate 0.01 --beta_s 0.0
 """
-
+import pdb
 import os
 import numpy as np
 import random
@@ -53,6 +53,7 @@ for step in trange(args.iterations):
         model.train()
         outputs = model.forward(states, actions, lengths)
         loss, nll, kl_z, kl_b = compile_utils.get_losses(states, actions, outputs, args)
+        # pdb.set_trace()
 
         train_loss += nll.item() # This is just the NLL loss (without regularizers) - #TODO: Log all the terms
         batch_num += 1

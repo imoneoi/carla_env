@@ -5,6 +5,7 @@ from torch.nn.utils.rnn import pad_sequence
 import torch
 import numpy as np
 from arguments import device
+import pdb
 
 def pad_collate(batch):
   (obss, actss, rewss, seeds) = zip(*batch)
@@ -29,6 +30,8 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
         self.traj_dir = traj_dir
         self.trajectories = []
         self.state_norm = state_norm  # Add the state_norm argument to control normalization
+        self.obs_min = None
+        self.obs_max = None
 
         # Load JSON files as data samples
         h5_files = [filename for filename in os.listdir(traj_dir)]
@@ -69,6 +72,8 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
             num_selected_trajectories = int(len(self.trajectories) * (1 - self.args.train_eval_ratio))
         selected_indices = random.sample(range(len(self.trajectories)), num_selected_trajectories)
         self.trajectories = [self.trajectories[idx] for idx in selected_indices]
+        if self.state_norm:
+            self.compute_obs_min_max()
 
     def __len__(self):
         return len(self.trajectories)
@@ -101,16 +106,28 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
 
         return out
 
+    def compute_obs_min_max(self):
+        obs_list = []
+        for trajectory in self.trajectories:
+            for data_point in trajectory:
+                obs_list.append(torch.Tensor([data_point[8], data_point[9], data_point[10], data_point[21], data_point[22]]))
+
+        obs_tensor = torch.stack(obs_list, dim=0)
+        self.obs_min = torch.min(obs_tensor, dim=0).values
+        self.obs_max = torch.max(obs_tensor, dim=0).values
+    
     # [-1, 1]
     def state_normalize(self, obs):
-        # Calculate min and max values for each feature in the observation space
-        min_val = torch.min(obs, dim=0).values
-        max_val = torch.max(obs, dim=0).values
-
+        if self.obs_min.device != obs.device:
+            self.obs_min = self.obs_min.to(obs.device)
+        if self.obs_max.device != obs.device:
+            self.obs_max = self.obs_max.to(obs.device)
+        # pdb.set_trace()
         # Normalize the observation space to the range [-1, 1]
-        obs = 2 * (obs - min_val) / (max_val - min_val) - 1
-
+        obs = 2 * (obs - self.obs_min) / (self.obs_max - self.obs_min) - 1
+        
         return obs
+
 
 class TrajectoryDatasetwithPosition(Dataset):
     def __init__(self, traj_dir, args, train=True):
