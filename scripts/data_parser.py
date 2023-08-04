@@ -97,9 +97,9 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
         # obs = obs[:-1]  # End goal
 
         if self.args.action_type == "discrete":
-            out = [obs, (actions + 1).type(torch.int64), rews, seed]  # So that we can use padding 0
+            out = [obs[:, -self.args.state_dim:], (actions + 1).type(torch.int64), rews, seed]  # So that we can use padding 0
         else:
-            out = [obs, actions, rews, seed]
+            out = [obs[:, -self.args.state_dim:], actions, rews, seed]
             
         if self.state_norm:
             out[0] = self.state_normalize(out[0])  # Call state_normalize only for observations
