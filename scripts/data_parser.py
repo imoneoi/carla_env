@@ -113,8 +113,8 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
                 obs_list.append(torch.Tensor([data_point[8], data_point[9], data_point[10], data_point[21], data_point[22]]))
 
         obs_tensor = torch.stack(obs_list, dim=0)
-        self.obs_min = torch.min(obs_tensor, dim=0).values
-        self.obs_max = torch.max(obs_tensor, dim=0).values
+        self.obs_min = torch.min(obs_tensor[:, -self.args.state_dim:], dim=0).values
+        self.obs_max = torch.max(obs_tensor[:, -self.args.state_dim:], dim=0).values
     
     # [-1, 1]
     def state_normalize(self, obs):
