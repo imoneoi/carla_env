@@ -96,8 +96,8 @@ def plot_skills(args_dict):
             # ipdb.set_trace()
 
             # Extract the x and y coordinates of the starting and terminal points
-            start_point = traj[x1]
-            terminal_point = traj[x2-1]
+            start_point = np.array(traj[x1])
+            terminal_point = np.array(traj[x2-1])
 
             # Extract the x and y coordinates of the middle points inside the segment
             middle_points_x = np.array([state[0] for state in traj[x1:x2]])
@@ -108,15 +108,26 @@ def plot_skills(args_dict):
             # Set the colormap function
             cmap = plt.cm.viridis
 
-            # Plot the middle points, setting colors based on the speed values
-            plt.scatter(100 * middle_points_x, 100 * middle_points_y, c=middle_points_v, cmap=cmap, alpha=0.75, s=1)
+            if args_dict["viz_type"] == "pos_agnostic":
+                # Plot the middle points, setting colors based on the speed values
+                plt.scatter(middle_points_x - start_point[0], middle_points_y - start_point[1], c=middle_points_v, cmap=cmap, alpha=0.75, s=1)
 
-            # Plot the starting and terminal points with distinct colors
-            plt.plot(100 * start_point[0], 100 * start_point[1], marker='o', markersize=2, color='mediumvioletred')
-            plt.plot(100 * terminal_point[0], 100 * terminal_point[1], marker='o', markersize=2, color='blue')
+                # Plot the starting and terminal points with distinct colors
+                plt.plot(0, 0, marker='o', markersize=2, color='mediumvioletred')
+                plt.plot(terminal_point[0] - start_point[0], terminal_point[1] - start_point[1], marker='o', markersize=2, color='blue')
 
-            # # Plot the middle points inside the segment
-            # plt.plot(100 * middle_points_x, 100 * middle_points_y, color="gray", alpha=0.75)
+                # # Plot the middle points inside the segment
+                # plt.plot(middle_points_x, middle_points_y, color="gray", alpha=0.75)
+            else:
+                # Plot the middle points, setting colors based on the speed values
+                plt.scatter(100 * middle_points_x, 100 * middle_points_y, c=middle_points_v, cmap=cmap, alpha=0.75, s=1)
+
+                # Plot the starting and terminal points with distinct colors
+                plt.plot(100 * start_point[0], 100 * start_point[1], marker='o', markersize=2, color='mediumvioletred')
+                plt.plot(100 * terminal_point[0], 100 * terminal_point[1], marker='o', markersize=2, color='blue')
+
+                # # Plot the middle points inside the segment
+                # plt.plot(100 * middle_points_x, 100 * middle_points_y, color="gray", alpha=0.75)
 
         plt.xlabel("x")
         plt.ylabel("y")
@@ -154,10 +165,11 @@ args_dict = {"min_skill_length":MIN_SKILL_LENGTH,
     "num_episodes":3,
     "same_traj":False,
     "sample":True,
+    "viz_type":"pos_agnostic", # pos_based
     "chosen_skills":[1,8,15], #Make sure latents are always the same :)
     "idx_for_fixed_skills":{1:[0], 8:[0], 15:[0]},
     # TODO: change saved model directory
-    "compile_dir":"results/CompILE_CIL_statediff_beta_s=1_iteration=2000_latent_dim=16_maxSegNum=4_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-07-27-20-45-10",
+    "compile_dir":"results/CompILE_oriXY_snorm_CIL_statediff_iteration=200_latent_dim=12_maxSegNum=4_expectedSegLength=30_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-08-03-22-10-14",
     "min_skill_length":MIN_SKILL_LENGTH}
 # logs_fn = plot_rollouts(args_dict)
 logs_fn = plot_skills(args_dict)
