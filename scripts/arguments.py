@@ -71,6 +71,7 @@ parser.add_argument("--temp_b", type=float, default=1.0, help="Gumbel softmax te
 parser.add_argument("--temp_z", type=float, default=1.0, help="Temperature for latents, only if latent_dist='concrete'")
 parser.add_argument("--state_norm", type=bool, default=False, help="state normalization")
 parser.add_argument("--mode", type=str, default="action", help="What to embed/reconstruct -> action or state+action or statediff+action")
+parser.add_argument("--viz_mode", type=bool, default=False, help="visualize all the state dimensions")
 parser.add_argument("--action_type", type=str, default="continuous", help="Action type -> discrete or continuous")
 parser.add_argument('--wandb', type=bool, default=True)
 parser.add_argument("--wb", action="store_true", help="Record to wandb")

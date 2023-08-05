@@ -32,6 +32,7 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
         self.state_norm = state_norm  # Add the state_norm argument to control normalization
         self.obs_min = None
         self.obs_max = None
+        self.viz_mode = args.viz_mode
 
         # Load JSON files as data samples
         h5_files = [filename for filename in os.listdir(traj_dir)]
@@ -99,7 +100,10 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
         if self.args.action_type == "discrete":
             out = [obs[:, -self.args.state_dim:], (actions + 1).type(torch.int64), rews, seed]  # So that we can use padding 0
         else:
-            out = [obs[:, -self.args.state_dim:], actions, rews, seed]
+            if self.viz_mode:
+                out = [obs, actions, rews, seed]
+            else:
+                out = [obs[:, -self.args.state_dim:], actions, rews, seed]
             
         if self.state_norm:
             out[0] = self.state_normalize(out[0])  # Call state_normalize only for observations

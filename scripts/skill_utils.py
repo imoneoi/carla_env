@@ -2,7 +2,7 @@ import viz_utils
 import torch
 from collections import defaultdict
 import numpy as np
-import ipdb
+import pdb
 NUM_TYPE_SKILLS = 3
 MAX_T = {'parking':25}
 
@@ -186,7 +186,8 @@ def get_all_skills(args_dict):
         print("Applying Parking Filter")
         states, actions, rews, seeds, lengths = apply_parking_filter(states, actions, rews, seeds, lengths) 
     model.training = False
-    outputs = model.forward(states, actions, lengths)
+    # pdb.set_trace()
+    outputs = model.forward(states[:, :, -args.state_dim:], actions, lengths)
     z, z_idx, boundaries_by_latent, segments_by_latent, latents_by_segment, boundaries_by_episode = viz_utils.get_latent_info(outputs, lengths, args)
     latent_skills_dict = defaultdict(lambda: defaultdict(list))
     for latent in viz_utils.get_latent_and_segment_std(segments_by_latent):
