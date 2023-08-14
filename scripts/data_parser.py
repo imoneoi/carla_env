@@ -39,6 +39,10 @@ class CILTrajectoryDatasetwithVectorState(Dataset):
         
         for filename in h5_files:
             file_path = os.path.join(traj_dir, filename)
+            # Check if the file is an HDF5 file
+            if not h5py.is_hdf5(file_path):
+                print(f"Skipping non-HDF5 file: {filename}")
+                continue
             f = h5py.File(file_path, 'r')
             measurement_data = list(f[u'targets'])
             ct = 0
