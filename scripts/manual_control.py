@@ -63,12 +63,12 @@ class ManualInterface:
         for js in self.joysticks:
             accel = -js.axes.get("ry", 0.0)  # Left lever, L <--> R
             steer = js.axes.get("x", 0.0)   # Right lever, U <--> D
-            reverse = js.buttons["tl"]    # LB
+            # reverse = js.buttons["tl"]    # LB
 
             # act.append(carla.VehicleControl(
             #     throttle=max(0.0, accel),
             #     brake=-min(0.0, accel),
-            #
+            
             #     steer=steer,
             #     reverse=reverse
             # ))
