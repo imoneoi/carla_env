@@ -40,7 +40,7 @@ import ipdb
 
 MIN_SKILL_LENGTH = 2
 # TODO: change rollout dataset directory
-ROLLOUTS_DIR = "../../../CORL2017ImitationLearningData/AgentHuman/SeqVal"
+ROLLOUTS_DIR = "../../../CORL2017ImitationLearningData/AgentHuman/SeqTrain"
 
 #set random seeds
 torch.manual_seed(args.random_seed)
@@ -169,7 +169,7 @@ args_dict = {"min_skill_length":MIN_SKILL_LENGTH,
     "chosen_skills":[1,8,15], #Make sure latents are always the same :)
     "idx_for_fixed_skills":{1:[0], 8:[0], 15:[0]},
     # TODO: change saved model directory
-    "compile_dir":"results/CompILE_oriXY_snorm_CIL_statediff_iteration=200_latent_dim=12_maxSegNum=4_expectedSegLength=30_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-08-03-22-10-14",
+    "compile_dir":"results/CompILE_snorm_CIL_statediff_iteration=100_latent_dim=16_maxSegNum=4_expectedSegLength=30_beta_b=0.1_beta_z=0.1_beta_s=1.0_23-08-02-17-16-46",
     "min_skill_length":MIN_SKILL_LENGTH}
 # logs_fn = plot_rollouts(args_dict)
 logs_fn = plot_skills(args_dict)
